@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GCI — Dashboard de Acompanhamento de Ativos</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f4f7;min-height:100vh;padding:20px}
+:root{--gci:#1a4a5c;--gci-dark:#0d2f3d;--gci-mid:#2a6880;--border:#d4dde4;--bg:#fff;--bg2:#f0f4f7;--text:#1a2e3b;--text2:#5a7a8a;--text3:#9ab0bc}
+.db{max-width:1400px;margin:0 auto}
+.topbar{background:var(--gci);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;border-radius:12px;margin-bottom:20px}
+.logo-circle{width:42px;height:42px;background:var(--gci-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;letter-spacing:.5px;flex-shrink:0}
+.topbar-title{color:#fff;font-size:16px;font-weight:600}
+.topbar-sub{color:rgba(255,255,255,.55);font-size:12px;margin-top:2px}
+.topbar-right{color:rgba(255,255,255,.45);font-size:12px}
+.filters-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.search-box{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:7px 12px;flex:1;min-width:200px;max-width:380px}
+.search-box input{border:none;background:transparent;font-size:13px;color:var(--text);outline:none;width:100%}
+.search-box input::placeholder{color:var(--text3)}
+.fbtn{padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:#fff;font-size:13px;color:var(--text2);cursor:pointer;transition:all .12s}
+.fbtn.active{background:var(--gci);color:#fff;border-color:var(--gci)}
+.fbtn:hover:not(.active){background:#e8f0f4}
+.fsel{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:13px;color:var(--text2)}
+.fsel select{border:none;background:transparent;font-size:13px;color:var(--text);cursor:pointer;outline:none;max-width:200px}
+.sumrow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.sumcard{background:#fff;border-radius:10px;padding:14px 18px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.sumlabel{font-size:11px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.sumval{font-size:26px;font-weight:600;color:var(--text)}
+.sumval.c1{color:var(--gci)}.sumval.c2{color:#b87a00}.sumval.c3{color:#c0392b}.sumval.c4{color:var(--text3)}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px}
+.acard{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:box-shadow .15s,border-color .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.acard:hover{box-shadow:0 4px 12px rgba(26,74,92,.1);border-color:#b0c8d4}
+.cheader{background:var(--gci);padding:14px 16px 0;position:relative}
+.cheader-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
+.ctype{font-size:10px;font-weight:600;letter-spacing:1px;color:rgba(255,255,255,.55);text-transform:uppercase;display:flex;align-items:center;gap:5px}
+.cname{font-size:14px;font-weight:600;color:#fff;line-height:1.3;margin-bottom:3px}
+.csub{font-size:11px;color:rgba(255,255,255,.5);margin-bottom:12px;line-height:1.4}
+.sbadge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.s-at{background:rgba(39,174,96,.2);color:#27ae60}.s-at .sdot{background:#27ae60}
+.s-in{background:rgba(231,76,60,.2);color:#e74c3c}.s-in .sdot{background:#e74c3c}
+.s-ca{background:rgba(149,165,166,.2);color:#95a5a6}.s-ca .sdot{background:#95a5a6}
+.s-li{background:rgba(127,140,141,.2);color:#7f8c8d}.s-li .sdot{background:#7f8c8d}
+.num-badge{display:inline-block;background:rgba(255,255,255,.15);color:rgba(255,255,255,.8);font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px}
+.tabnav{display:flex;background:#0f3347;overflow-x:auto;scrollbar-width:none}
+.tabnav::-webkit-scrollbar{display:none}
+.tabitem{flex-shrink:0;padding:9px 13px;font-size:11px;font-weight:500;color:rgba(255,255,255,.5);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .12s,border-color .12s;user-select:none}
+.tabitem.on{color:#fff;border-bottom-color:#3dd68c}
+.tabitem:hover:not(.on){color:rgba(255,255,255,.8)}
+.tabpanel{padding:14px 16px;display:none}
+.tabpanel.on{display:block}
+.frow{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;gap:8px;border-bottom:1px solid #eef2f5}
+.frow:last-child{border-bottom:none}
+.flabel{font-size:12px;color:var(--text2);flex-shrink:0;min-width:130px;padding-right:8px;line-height:1.4}
+.fval{font-size:12px;color:var(--text);text-align:right;font-weight:500;line-height:1.4}
+.fval.em{color:var(--text3);font-weight:400;font-style:italic}
+.tbl-section{position:relative;padding-bottom:44px}
+.tbl-wrap{overflow-x:auto}
+.dtbl{width:100%;border-collapse:collapse;font-size:12px}
+.dtbl th{text-align:left;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.4px;padding:6px 10px 6px 0;border-bottom:1px solid #eef2f5;white-space:nowrap;text-transform:uppercase}
+.dtbl td{padding:8px 10px 8px 0;border-bottom:1px solid #eef2f5;color:var(--text2);font-style:italic;vertical-align:top;line-height:1.4}
+.dtbl tr.filled td{color:var(--text);font-style:normal}
+.dtbl tr:last-child td{border-bottom:none}
+.btn-add{position:absolute;bottom:6px;right:0;width:32px;height:32px;border-radius:50%;background:var(--gci);border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s;line-height:1;box-shadow:0 2px 8px rgba(26,74,92,.3)}
+.btn-add:hover{background:var(--gci-mid)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;padding:22px;width:440px;max-width:94vw;max-height:84vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.modal-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:16px}
+.modal-field{margin-bottom:12px}
+.modal-field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px}
+.modal-field input,.modal-field textarea{width:100%;border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit;outline:none;transition:border-color .12s}
+.modal-field textarea{resize:vertical;min-height:64px}
+.modal-field input:focus,.modal-field textarea:focus{border-color:var(--gci)}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.btn-cancel{padding:8px 18px;border-radius:7px;border:1px solid var(--border);background:#f0f4f7;font-size:13px;color:var(--text2);cursor:pointer;font-family:inherit}
+.btn-save{padding:8px 18px;border-radius:7px;border:none;background:var(--gci);font-size:13px;color:#fff;cursor:pointer;font-family:inherit}
+.btn-cancel:hover{background:#e0e8ed}
+.btn-save:hover{background:var(--gci-mid)}
+
+
+/* === POST-IT BUTTON === */
+.nota-btn{position:relative;width:26px;height:26px;border-radius:6px;border:none;background:#f5d400;color:#7a6800;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(0,0,0,.2);transition:background .12s,transform .1s;z-index:2;flex-shrink:0}
+.nota-btn:hover{background:#f0c800;transform:scale(1.08)}
+.nota-btn.has-nota{background:#f5d400;box-shadow:0 2px 5px rgba(0,0,0,.25)}
+.nota-btn.has-nota::after{content:'';position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:#e74c3c}
+.nota-popup{display:none;position:absolute;top:32px;right:0;width:240px;background:#fffbe6;border:1px solid #e0cc00;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:100;padding:10px}
+.nota-popup.open{display:block}
+.nota-popup textarea{width:100%;border:1px solid #e0d000;border-radius:5px;padding:7px 8px;font-size:12px;color:#4a3e00;background:#fffff5;font-family:inherit;outline:none;resize:vertical;min-height:80px;line-height:1.5}
+.nota-popup textarea:focus{border-color:#c8a800}
+.nota-popup-footer{display:flex;justify-content:flex-end;gap:6px;margin-top:6px}
+.nota-popup-save{padding:4px 12px;border-radius:5px;border:none;background:#c8a800;font-size:11px;color:#fff;cursor:pointer;font-family:inherit}
+.nota-popup-cancel{padding:4px 10px;border-radius:5px;border:1px solid #d4c000;background:transparent;font-size:11px;color:#7a6800;cursor:pointer;font-family:inherit}
+
+
+/* === BOTÃO ENCERRAR / REATIVAR === */
+.card-footer{display:none}
+.btn-status-toggle{padding:5px 14px;border-radius:6px;border:none;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .12s}
+.btn-encerrar{background:#f0f4f7;color:#5a7a8a;border:1px solid var(--border)}
+.btn-encerrar:hover{background:#e0eaf0;color:#1a4a5c}
+.btn-reativar{background:#e8f7f0;color:#1a7a4a;border:1px solid #a8d8bc}
+.btn-reativar:hover{background:#d4f0e4;color:#0f5c35}
+
+/* === HISTÓRICO DE ASSEMBLEIA === */
+.hist-row{display:flex;align-items:center;gap:6px;margin-top:4px}
+.hist-btn{font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--border);background:#f0f4f7;color:var(--text2);cursor:pointer;font-family:inherit;white-space:nowrap}
+.hist-btn:hover{background:#e0eaf0;color:var(--gci)}
+.hist-expanded{background:#f8fafc;border-radius:6px;padding:8px 10px;margin-top:6px;font-size:12px;color:var(--text);line-height:1.5;border:1px solid #eef2f5;white-space:pre-wrap;word-break:break-word}
+
+/* === BOTÃO EXCLUIR LINHA === */
+.tbl-del-btn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;border:none;background:transparent;color:#c0392b;cursor:pointer;font-size:14px;padding:0;line-height:1;opacity:.5;transition:opacity .12s}
+.tbl-del-btn:hover{opacity:1;background:#fde8e8}
+
+/* === MODAL HISTÓRICO === */
+.hist-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1100;align-items:center;justify-content:center}
+.hist-modal-overlay.open{display:flex}
+.hist-modal{background:#fff;border-radius:12px;padding:22px;width:500px;max-width:94vw;max-height:84vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.hist-modal-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.hist-modal-sub{font-size:12px;color:var(--text2);margin-bottom:14px}
+.hist-modal textarea{width:100%;border:1px solid var(--border);border-radius:7px;padding:9px 11px;font-size:13px;color:var(--text);font-family:inherit;outline:none;resize:vertical;min-height:120px;line-height:1.5}
+.hist-modal textarea:focus{border-color:var(--gci)}
+.hist-modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+
+.no-res{text-align:center;padding:4rem;color:var(--text3);font-size:14px;grid-column:1/-1}
+@media(max-width:600px){.sumrow{grid-template-columns:repeat(2,1fr)}.cgrid{grid-template-columns:1fr}.filters-row{flex-wrap:wrap}}
+
+/* ===== ABAS PRINCIPAIS ===== */
+.main-tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid var(--border);padding-bottom:0}
+.main-tab{padding:10px 22px;border:none;background:transparent;font-size:14px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .12s,border-color .12s;font-family:inherit}
+.main-tab.active{color:var(--gci);border-bottom-color:var(--gci);font-weight:600}
+.main-tab:hover:not(.active){color:var(--text)}
+
+/* ===== CONTROLS ROW ===== */
+.controls-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+
+/* ===== CHIPS DE FILTRO ===== */
+.chips-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .12s;font-family:inherit}
+.chip.chip-active,.chip:hover{background:#e8f4f8;border-color:#1a4a5c;color:#1a4a5c}
+.chip.on{background:#1a4a5c;border-color:#1a4a5c;color:#fff}
+.chip.chip-danger:hover,.chip.chip-danger.on{background:#fde8e8;border-color:#c0392b;color:#c0392b}
+.chip.chip-muted:hover,.chip.chip-muted.on{background:#f0f4f7;border-color:#7f8c8d;color:#5a7a8a}
+.chip-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:10px;font-size:11px;font-weight:700;background:rgba(26,74,92,.12);color:inherit;padding:0 5px}
+.chip.on .chip-badge{background:rgba(255,255,255,.25);color:#fff}
+.chip-badge-danger{background:rgba(192,57,43,.12);color:#c0392b}
+.chip-badge-muted{background:rgba(127,140,141,.12);color:#7f8c8d}
+
+/* ===== ALERTAS ===== */
+.alert-chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.alert-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:16px;font-size:12px;font-weight:500;background:#fff3cd;border:1px solid #ffc107;color:#856404}
+.alert-chip.red{background:#fde8e8;border-color:#e74c3c;color:#c0392b}
+.alert-chip.blue{background:#e8f4f8;border-color:#3498db;color:#1a5276}
+
+/* ===== BOTÃO NOVO INVESTIDOR ===== */
+.btn-add-inv{padding:7px 18px;border-radius:8px;border:none;background:var(--gci);color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background .12s}
+.btn-add-inv:hover{background:var(--gci-mid)}
+
+/* ===== LISTA INVESTIDORES ===== */
+.inv-list-wrap{display:flex;flex-direction:column;gap:0}
+.inv-row{background:#fff;border:1px solid var(--border);border-radius:0;padding:14px 20px;display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:16px;cursor:pointer;transition:background .12s,border-color .12s;position:relative}
+.inv-row:first-child{border-radius:10px 10px 0 0}
+.inv-row:last-child{border-radius:0 0 10px 10px}
+.inv-row:only-child{border-radius:10px}
+.inv-row+.inv-row{border-top:none}
+.inv-row:hover{background:#f8fafc;border-color:#b0c8d4}
+.inv-row-left{display:flex;flex-direction:column;gap:3px}
+.inv-row-name{font-size:15px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.inv-row-sub{font-size:12px;color:var(--text2)}
+.inv-type-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:#e8f4f8;color:#1a4a5c;border:1px solid #b0c8d4}
+.inv-col{text-align:right}
+.inv-col-label{font-size:11px;color:var(--text3);margin-bottom:2px;text-transform:uppercase;letter-spacing:.4px}
+.inv-col-val{font-size:14px;font-weight:600;color:var(--text)}
+.inv-col-val.green{color:#27ae60}
+.inv-status-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.inv-status-ativo{background:rgba(39,174,96,.15);color:#27ae60}
+.inv-status-inativo{background:rgba(127,140,141,.15);color:#7f8c8d}
+.inv-arrow{color:var(--text3);font-size:18px;flex-shrink:0}
+
+/* ===== DETALHE INVESTIDOR ===== */
+.inv-detail-wrap{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.inv-detail-header{background:var(--gci);padding:16px 20px;display:flex;align-items:flex-start;justify-content:space-between}
+.inv-detail-name{font-size:17px;font-weight:600;color:#fff;margin-bottom:3px}
+.inv-detail-sub{font-size:12px;color:rgba(255,255,255,.6)}
+.inv-detail-back{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 14px;border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit}
+.inv-detail-back:hover{background:rgba(255,255,255,.25)}
+.inv-detail-tabs{display:flex;background:#0f3347;overflow-x:auto;scrollbar-width:none}
+.inv-detail-tabs::-webkit-scrollbar{display:none}
+.inv-dtab{flex-shrink:0;padding:9px 14px;font-size:11px;font-weight:500;color:rgba(255,255,255,.5);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .12s,border-color .12s}
+.inv-dtab.on{color:#fff;border-bottom-color:#3dd68c}
+.inv-dtab:hover:not(.on){color:rgba(255,255,255,.8)}
+.inv-detail-body{padding:16px 20px}
+.inv-pos-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.inv-pos-table th{text-align:left;font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.4px;padding:7px 10px 7px 0;border-bottom:1px solid #eef2f5;text-transform:uppercase;white-space:nowrap}
+.inv-pos-table td{padding:10px 10px 10px 0;border-bottom:1px solid #eef2f5;color:var(--text);vertical-align:middle;font-size:13px}
+.inv-pos-table tr:last-child td{border-bottom:none}
+.inv-pos-table tfoot td{font-weight:600;color:var(--gci);border-top:2px solid var(--border);padding-top:10px}
+.inv-edit-btn{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:#f0f4f7;font-size:12px;color:var(--text2);cursor:pointer;font-family:inherit}
+.inv-edit-btn:hover{background:#e0eaf0;color:var(--gci)}
+
+/* ===== MODAL INVESTIDOR ===== */
+.inv-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1200;align-items:center;justify-content:center}
+.inv-modal-overlay.open{display:flex}
+.inv-modal{background:#fff;border-radius:12px;padding:22px;width:560px;max-width:94vw;max-height:86vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.inv-modal-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:16px}
+.inv-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.inv-modal-grid .full{grid-column:1/-1}
+
+.fchip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .12s;font-family:inherit}
+.fchip.fchip-active,.fchip:hover{background:#e8f4f8;border-color:#1a4a5c;color:#1a4a5c}
+.fchip.on{background:#1a4a5c;border-color:#1a4a5c;color:#fff}
+.fchip.chip-danger:hover,.fchip.chip-danger.on{background:#fde8e8;border-color:#c0392b;color:#c0392b}
+.fchip.chip-muted:hover,.fchip.chip-muted.on{background:#f0f4f7;border-color:#7f8c8d;color:#5a7a8a}
+.fchip.on .chip-badge{background:rgba(255,255,255,.25);color:#fff}
+</style>
+</head>
+<body>
+<div class="db">
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:14px">
+    <div class="logo-circle">GCI</div>
+    <div>
+      <div class="topbar-title">Grupo Ceres Investimentos</div>
+      <div class="topbar-sub">Relações com Investidores &amp; Distribuição — Acompanhamento de Ativos</div>
+    </div>
+  </div>
+  <div class="topbar-right" id="lbl-total">46 ativos</div>
+</div>
+<!-- ABAS PRINCIPAIS -->
+<div class="main-tabs">
+  <button class="main-tab active" data-section="cras">CRAs</button>
+  <button class="main-tab" data-section="fundos">Fundos</button>
+  <button class="main-tab" data-section="investidores">Investidores</button>
+</div>
+
+<!-- SECAO CRAs -->
+<div id="section-cras">
+  <div class="controls-row">
+    <div class="search-box">
+      <svg width="15" height="15" fill="none" stroke="#9ab0bc" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="srch" placeholder="Buscar por nome, devedor, ISIN, código...">
+    </div>
+    <div class="chips-row">
+      <button class="chip chip-active" data-t="Vigente">Vigentes <span class="chip-badge" id="chip-vig">0</span></button>
+      <button class="chip chip-danger" data-t="Inadimplente">Inadimplentes <span class="chip-badge chip-badge-danger" id="chip-inad">0</span></button>
+      <button class="chip chip-muted" data-t="Encerrada">Encerrados <span class="chip-badge chip-badge-muted" id="chip-enc">0</span></button>
+      <button class="chip chip-muted" data-t="todos">Todos <span class="chip-badge chip-badge-muted" id="chip-all">0</span></button>
+    </div>
+    <div class="alert-chips" id="alert-chips"></div>
+    <div class="fsel">
+      <svg width="14" height="14" fill="none" stroke="#9ab0bc" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M7 12h10M11 18h2"/></svg>
+      <select id="sfil">
+        <option value="">Todos os devedores</option>
+        <option>URA AGRO FIDC</option>
+        <option>FUTURA INSUMOS AGRICOLAS LTDA</option>
+        <option>SYAGRI AGRONEGOCIOS</option>
+        <option>GONCALVES &amp; SILVA COMERCIO DE PRODUTOS AGRICOLAS LTDA</option>
+        <option>FORTE AGRO LTDA</option>
+        <option>TEC PLANTE - PRODUTOS AGRICOLAS LTDA</option>
+        <option>VIA AGRICOLA LTDA</option>
+        <option>HORTSOY COMERCIO E REPRESENTACOES LTDA</option>
+        <option>ESTEIO RURAL LTDA</option>
+        <option>ALVOAR LACTEOS S/A</option>
+        <option>BIOPAR PRODUCAO DE BIODIESEL PARECIS LTDA</option>
+        <option>SIAP COMERCIO DE PRODUTOS AGROPECUARIOS LTDA</option>
+        <option>LUIZ A. DE MOURA CASTRO JATOBA</option>
+        <option>PORTAL AGRO COMERCIO E SERVICOS LTDA</option>
+        <option>NOOA CIENCIA E TECNOLOGIA LTDA</option>
+        <option>ELOAGRICOLA COMERCIO REPRESENTACAO LTDA</option>
+        <option>VALORIZA AGRONEGOCIOS S/A</option>
+        <option>ELO AGRONEGOCIOS LTDA</option>
+        <option>A.A. FARIA COMERCIO E INDUSTRIA DE SEMENTES LTDA</option>
+        <option>NATIVA AGRONEGOCIOS LTDA</option>
+        <option>AGRO BOA ESPERANCA COMERCIO DE PRODUTOS AGROPECUARIOS LTDA</option>
+        <option>JOAO RUIZ LOURENCO</option>
+        <option>Pulverizado</option>
+      </select>
+    </div>
+  </div>
+  <div class="cgrid" id="cgrid"></div>
+</div>
+
+
+<!-- SECAO FUNDOS -->
+<div id="section-fundos" style="display:none">
+  <div class="controls-row">
+    <div class="search-box">
+      <svg width="15" height="15" fill="none" stroke="#9ab0bc" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="srch-fundos" placeholder="Buscar por nome, CNPJ, gestor...">
+    </div>
+    <div class="chips-row">
+      <button class="fchip fchip-active" data-ft="Vigente">Vigentes <span class="chip-badge" id="fchip-vig">0</span></button>
+      <button class="fchip chip-danger" data-ft="Inadimplente">Inadimplentes <span class="chip-badge chip-badge-danger" id="fchip-inad">0</span></button>
+      <button class="fchip chip-muted" data-ft="Encerrada">Encerrados <span class="chip-badge chip-badge-muted" id="fchip-enc">0</span></button>
+      <button class="fchip chip-muted" data-ft="todos">Todos <span class="chip-badge chip-badge-muted" id="fchip-all">0</span></button>
+    </div>
+  </div>
+  <div class="cgrid" id="fgrid"></div>
+</div>
+
+<!-- SECAO INVESTIDORES -->
+<div id="section-investidores" style="display:none">
+  <div class="controls-row" style="margin-bottom:16px">
+    <div class="search-box">
+      <svg width="15" height="15" fill="none" stroke="#9ab0bc" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="srch-inv" placeholder="Buscar investidor por nome, CNPJ...">
+    </div>
+    <button class="btn-add-inv" id="btn-add-inv">+ Novo investidor</button>
+  </div>
+  <div id="inv-detail" style="display:none"></div>
+  <div id="inv-list"></div>
+</div>
+
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Adicionar registro</div>
+    <div id="modal-fields"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="modal-cancel">Cancelar</button>
+      <button class="btn-save" id="modal-save">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="hist-modal-overlay" id="hist-modal-overlay">
+  <div class="hist-modal">
+    <div class="hist-modal-title" id="hm-title">Histórico da assembleia</div>
+    <div class="hist-modal-sub" id="hm-sub"></div>
+    <textarea id="hm-text" placeholder="Descreva aqui o histórico detalhado desta assembleia — contexto, discussões, decisões, encaminhamentos, participantes..."></textarea>
+    <div class="hist-modal-actions">
+      <button class="btn-cancel" id="hm-cancel">Cancelar</button>
+      <button class="btn-save" id="hm-save">Salvar histórico</button>
+    </div>
+  </div>
+</div>
+
+<script>const FA=[{key:'data',label:'Data',type:'input'},{key:'pauta',label:'Pauta',type:'textarea'},{key:'deliberacao',label:'Deliberação',type:'textarea'}];
+const FC=[{key:'data',label:'Data',type:'input'},{key:'operacao',label:'Operação',type:'input'},{key:'investidor',label:'Investidor',type:'input'},{key:'nomeContato',label:'Nome do contato',type:'input'},{key:'assunto',label:'Assunto/Solicitação',type:'textarea'},{key:'obs',label:'Observação',type:'textarea'}];
+const FT=[{key:'investidor',label:'Investidor',type:'input'},{key:'veiculo',label:'Veículo do investimento',type:'input'},{key:'cnpj',label:'CNPJ',type:'input'},{key:'classe',label:'Classe',type:'input'},{key:'qtdCotas',label:'Qtd. de cotas',type:'input'},{key:'pct',label:'% do fundo',type:'input'}];
+const LU='Duplicatas e CPR-F — URA Agro FIDC';
+const GU='Cessão fiduciária + Coobrigação Revendas + Regime Fiduciário';
+const TO1='Oferta pública com tranche privada';
+const TO2='Oferta pública';
+const EA=[];
+const BLV='Vórtx';
+const P={
+P1:{'Agente fiduciário':'Oliveira Trust','Banco liquidante':BLV,'Agente de cobrança':'Ceres Investimentos','Escriturador':'Vórtx','Coordenador líder':'Terra Investimentos'},
+P2:{'Agente fiduciário':'Oliveira Trust','Banco liquidante':BLV,'Agente de cobrança':'Ceres Investimentos','Escriturador':'Vórtx','Coordenador líder':'Guide Investimentos'},
+P3:{'Agente fiduciário':'Vórtx','Banco liquidante':BLV,'Agente de cobrança':'Ceres Investimentos','Escriturador':'Vórtx','Coordenador líder':'Ceres Securitizadora'},
+P4:{'Agente fiduciário':'Oliveira Trust','Banco liquidante':'Bradesco','Agente de cobrança':'Não há','Escriturador':'Vórtx','Coordenador líder':'Terra Investimentos'},
+P5:{'Agente fiduciário':'Oliveira Trust','Banco liquidante':BLV,'Agente de cobrança':'Não há','Escriturador':'Vórtx','Coordenador líder':'Terra Investimentos'}
+};
+const L1={'Concentração individual':'Nenhum devedor pode representar mais de 20% do valor total da oferta.'};
+const PF_URA={'Razão social':'URA AGRO FUNDO DE INVESTIMENTO EM DIREITOS CREDITÓRIOS','Atividade principal':'FIDC — Aquisição de DCs do agronegócio'};
+const CV_EVA=[{nome:'EVA automático',limite:'Falência, RJ, dissolução ou irregularidades nos DCs',periodicidade:'Contínuo'}];
+const DATA=[
+{id:1,nome:'CRA Ura Agro I — 1ª Emissão',devedor:'URA AGRO FIDC',status:'Encerrada',
+info:{'Número da emissão':'1ª','Código ISIN':'SR: BRCESCCRA009 / JR: BRCESCCRA017','Código IF':'SR: CRA022002GX / JR: CRA022002GY','Data de emissão':'16/02/2022','Data de vencimento':'09/03/2023','Volume emitido':'R$ 17.338.064,24','Taxa de remuneração':'SR: 18,857% a.a. / JR: 12,6825% a.a.','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'23704-3','Lastro':LU,'Garantias':GU,'Destinação dos recursos':'Aquisição dos DCs cedidos pelo URA Agro FIDC','Amortização extraordinária':'Não prevista','Prêmio de resgate antecipado':'Não há'},
+prest:P.P1,
+lim:L1,
+cov:[{nome:'EVA automático',limite:'Falência, RJ, dissolução da Cedente ou Securitizadora',periodicidade:'Contínuo'},{nome:'EVA não automático',limite:'Descumprimento do TS — cura de 10 dias úteis',periodicidade:'Contínuo'}],
+perfil:PF_URA,
+assembleias:[{data:'09/03/2022',pauta:'Resgate antecipado integral',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:2,nome:'CRA Futura — 2ª Emissão',devedor:'FUTURA INSUMOS AGRÍCOLAS LTDA',status:'Encerrada',
+info:{'Número da emissão':'2ª','Código ISIN':'SR: BRCESCCRA025 / MZ: BRCESCCRA033 / JR: BRCESCCRA041','Código IF':'SR: CRA022004MP / MZ: CRA022004MQ / JR: CRA022004MR','Data de emissão':'14/04/2022','Volume emitido':'R$ 30.000.000,00','Taxa de remuneração':'SR: CDI + 5,5% / MZ: 80% CDI / JR: 1% a.a.','Classes':'1-2-3','Tipo de oferta':TO1,'Banco liquidante':BLV,'Conta centralizadora':'444383-7','Lastro':'CDCA','Garantias':'Cessão fiduciária (CPR-F e Duplicatas)','Prêmio de resgate antecipado':'2% ao ano'},
+prest:P.P1,
+lim:{'Top 6 devedores individual':'R$ 1.980.000,00','Demais clientes':'R$ 990.000,00','Novos clientes (agregado)':'R$ 3.300.000,00','Partes relacionadas (agregado)':'R$ 3.300.000,00'},
+cov:[{nome:'D90+',limite:'Inadimplidos > CRA Sub Jr = EVA automático',periodicidade:'Mensal'},{nome:'VMG',limite:'≥ 100% do saldo dos CRA',periodicidade:'Mensal'}],
+perfil:{'Razão social':'FUTURA INSUMOS AGRÍCOLAS LTDA','Atividade principal':'Comercialização de insumos agrícolas (CPR-F e duplicatas de produtores rurais)'},
+assembleias:EA,contatos:EA,titulares:EA},
+{id:3,nome:'CRA Syagri — 3ª Emissão',devedor:'SYAGRI AGRONEGÓCIOS',status:'Encerrada',
+info:{'Número da emissão':'3ª','Código ISIN':'SR: BRCESCCRA058 / JR: BRCESCCRA066','Código IF':'SR: CRA022005PL / JR: CRA022005PM','Data de emissão':'05/05/2022','Volume emitido':'R$ 20.335.000,00','Taxa de remuneração':'SR: CDI + 6,32% / JR: 1% a.a.','Classes':'1-2','Tipo de oferta':TO1,'Banco liquidante':BLV,'Conta centralizadora':'444827-8','Lastro':'CDCA','Garantias':'Cessão Fiduciária + Aval pessoal','Prêmio de resgate antecipado':'2% ao ano'},
+prest:P.P1,
+lim:{'Limite individual por cliente':'R$ 660.000,00','Novos clientes (agregado)':'R$ 2.200.000,00','Partes relacionadas (agregado)':'R$ 2.200.000,00'},
+cov:[{nome:'D90+',limite:'Inadimplidos > Sub Jr = EVA automático',periodicidade:'Mensal'},{nome:'Liquidez corrente','limite':'≥ 1,00 (AC/PC)',periodicidade:'Anual'}],
+perfil:{'Razão social':'SYAGRI AGRONEGÓCIOS COMÉRCIO E REPRESENTAÇÕES','Atividade principal':'Comercialização e beneficiamento de produtos e insumos agrícolas'},
+assembleias:EA,contatos:EA,titulares:EA},
+{id:4,nome:'CRA Semeagro — 4ª Emissão',devedor:'GONÇALVES & SILVA COMÉRCIO DE PRODUTOS AGRÍCOLAS LTDA',status:'Vigente',
+info:{'Número da emissão':'4ª','Código ISIN':'SR: BRCESCCRA074 / JR: BRCESCCRA082','Código IF':'SR: CRA022007VN / JR: CRA0220080X','Data de emissão':'07/07/2022','Volume emitido':'R$ 10.625.000,00','Taxa de remuneração':'SR: CDI + 5,56% / JR: 1,00% a.a.','Classes':'1-2','Tipo de oferta':TO1,'Banco liquidante':BLV,'Conta centralizadora':'445226-7','Lastro':'CDCA','Garantias':'Aval + Cessão fiduciária','Prêmio de resgate antecipado':'3% ao ano'},
+prest:P.P1,
+lim:{'Por cliente':'R$ 330.000,00','8 maiores (conjunto)':'R$ 4.400.000,00','8 maiores (individual)':'R$ 550.000,00','Novos clientes':'R$ 1.650.000,00','Partes relacionadas':'R$ 1.100.000,00'},
+cov:[{nome:'D90+',limite:'Inadimplidos > Sub Jr = EVA automático',periodicidade:'Mensal'},{nome:'VMG',limite:'≥ 100%',periodicidade:'Mensal'},{nome:'Liquidez corrente',limite:'≥ 1,00',periodicidade:'Anual'}],
+perfil:{'Razão social':'GONÇALVES & SILVA COMÉRCIO DE PRODUTOS AGRÍCOLAS LTDA','Atividade principal':'Comercialização de insumos a produtores rurais'},
+assembleias:EA,contatos:EA,titulares:EA},
+{id:5,nome:'CRA Forte Agro — 5ª Emissão',devedor:'FORTE AGRO LTDA',status:'Encerrada',
+info:{'Número da emissão':'5ª','Código ISIN':'SR: BRCESCCRA090 / MZ: BRCESCCRA0A2 / JR: BRCESCCRA0B0','Código IF':'SR: CRA022008NG / MZ: CRA022008NI / JR: Privada','Data de emissão':'01/08/2022','Volume emitido':'R$ 25.000.000,00','Taxa de remuneração':'SR: CDI + 4,46% / MZ: CDI + 7,50% / JR: 1% a.a.','Classes':'1-2-3','Tipo de oferta':TO1,'Banco liquidante':BLV,'Conta centralizadora':'445230-5','Lastro':'CDCA','Garantias':'Aval + Cessão fiduciária','Prêmio de resgate antecipado':'3% ao ano'},
+prest:P.P1,
+lim:{'Por cliente':'R$ 825.000,00','5 maiores (conjunto)':'R$ 5.500.000,00','5 maiores (individual)':'R$ 1.100.000,00','Novos clientes':'R$ 2.750.000,00','Partes relacionadas':'R$ 2.750.000,00'},
+cov:[{nome:'D90+',limite:'Inadimplidos > Sub Jr = EVA automático',periodicidade:'Mensal'},{nome:'VMG',limite:'≥ 100%',periodicidade:'Mensal'}],
+perfil:{'Razão social':'FORTE AGRO LTDA','Atividade principal':'Comercialização de insumos a produtores rurais'},
+assembleias:[{data:'07/07/2025',pauta:'Resgate antecipado total; prêmio fixo R$ 100.000,00; 3ª série via dação em pagamento',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:6,nome:'CRA Tec Plante — 6ª Emissão',devedor:'TEC PLANTE - PRODUTOS AGRÍCOLAS LTDA',status:'Encerrada',
+info:{'Número da emissão':'6ª','Código ISIN':'SR: BRCESCCRA0C8 / JR: BRCESCCRA0D6','Código IF':'SR: CRA022008YF / JR: Privada','Data de emissão':'17/08/2022','Volume emitido':'R$ 16.000.000,00','Taxa de remuneração':'SR: CDI + 6,50% / JR: 1% a.a.','Classes':'1-2','Tipo de oferta':TO1,'Banco liquidante':BLV,'Conta centralizadora':'445502-9','Lastro':'CDCA','Garantias':'Aval + Cessão fiduciária','Prêmio de resgate antecipado':'3% ao ano'},
+prest:P.P1,
+lim:{'Por cliente':'R$ 540.000,00','Top 5 (conjunto)':'R$ 4.500.000,00','Top 5 (individual)':'R$ 900.000,00','Novos clientes':'R$ 1.800.000,00'},
+cov:[{nome:'D90+',limite:'Inadimplidos > Sub Jr = EVA automático',periodicidade:'Mensal'}],
+perfil:{'Razão social':'TEC PLANTE - PRODUTOS AGRÍCOLAS LTDA','Atividade principal':'Comercialização de insumos agrícolas'},
+assembleias:[{data:'03/09/2025',pauta:'Resgate antecipado total CDCA A e B; 3ª série via dação em R$ 5.787.813,15',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:7,nome:'CRA Via Agrícola — 7ª Emissão',devedor:'VIA AGRÍCOLA LTDA',status:'Encerrada',
+info:{'Número da emissão':'7ª','Código ISIN':'1ª: BRCESCCRA0E4 / 2ª: BRCESCCRA0E4','Código IF':'1ª: CRA0220093T / 2ª: CRA02200C1H','Data de emissão':'1ª série: 01/09/2022 / 2ª série: 10/11/2022','Volume emitido':'R$ 10.670.000,00','Taxa de remuneração':'CDI + 5,00%','Classes':'1-2','Tipo de oferta':TO1,'Banco liquidante':BLV,'Conta centralizadora':'445495-2','Conta vinculada':'80030-0','Lastro':'CDCA','Garantias':'Aval + Cessão fiduciária','Prêmio de resgate antecipado':'3% ao ano'},
+prest:P.P1,
+lim:{'Concentração individual':'R$ 330.000,00 — 3% do VMG','Concentração especial':'R$ 550.000,00 — 5% do VMG','Total especial (40% VMG)':'R$ 4.400.000,00','Novos clientes':'R$ 1.650.000,00','Partes relacionadas':'R$ 1.100.000,00'},
+cov:[{nome:'D90+',limite:'Inadimplidos > Sub Jr = EVA automático',periodicidade:'Mensal'},{nome:'Liquidez corrente',limite:'≥ 1,00',periodicidade:'Anual'}],
+perfil:{'Razão social':'VIA AGRÍCOLA LTDA','Atividade principal':'Financiamento de operações do agronegócio / comercialização de insumos'},
+assembleias:EA,contatos:EA,titulares:EA},
+{id:8,nome:'CRA Hortsoy — 8ª Emissão',devedor:'HORTSOY COMÉRCIO E REPRESENTAÇÕES LTDA',status:'Encerrada',
+info:{'Número da emissão':'8ª','Código ISIN':'SR: BRCESCCRA0F1 / JR: BRCESCCRA0G9','Código IF':'SR: CRA02200BF7 / JR: CRA02200BF8','Data de emissão':'06/10/2022','Volume emitido':'R$ 60.000.000,00','Taxa de remuneração':'SR: CDI + 4,50% / JR: 100% CDI','Classes':'1-2','Tipo de oferta':TO1,'Banco liquidante':BLV,'Conta centralizadora':'445541-P','Lastro':'CDCA','Garantias':'Aval + Cessão fiduciária'},
+prest:P.P1,
+lim:{'Soma dos DCs por cliente':'3% do VMC','Top 5 (conjunto)':'20% do VMC','Top 5 (individual)':'4% do VMC'},
+cov:[{nome:'D90+',limite:'Inadimplidos > Sub Jr = EVA automático',periodicidade:'Mensal'},{nome:'Liquidez corrente',limite:'≥ 1,00',periodicidade:'Anual'}],
+perfil:{'Razão social':'HORTSOY COMÉRCIO E REPRESENTAÇÕES LTDA','Atividade principal':'Comercialização de insumos agrícolas / representações'},
+assembleias:[{data:'12/09/2025',pauta:'Ajustes estruturais e regularização',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:9,nome:'CRA Esteio Rural — 9ª Emissão',devedor:'ESTEIO RURAL LTDA',status:'Encerrada',
+info:{'Número da emissão':'9ª','Código ISIN':'SR: BRCESCCRA0J3 / JR: BRCESCCRA0K1','Código IF':'SR: CRA02200D49 / JR: CRA02200D4A','Data de emissão':'07/11/2022','Volume emitido':'R$ 25.000.000,00','Taxa de remuneração':'SR: CDI + 5,50% / JR: CDI + 7,00%','Classes':'1-2','Tipo de oferta':TO1,'Banco liquidante':BLV,'Conta centralizadora':'446158-4','Lastro':'CDCA','Garantias':'Aval + Cessão fiduciária','Prêmio de resgate antecipado':'3% ao ano'},
+prest:P.P1,
+lim:{'5 maiores (conjunto)':'R$ 5.500.000,00','5 maiores (individual)':'R$ 1.100.000,00','Demais clientes':'R$ 825.000,00','Novos clientes':'R$ 2.750.000,00','Partes relacionadas':'R$ 2.750.000,00'},
+cov:[{nome:'D90+',limite:'Inadimplidos > Sub Jr = EVA automático',periodicidade:'Mensal'}],
+perfil:{'Razão social':'ESTEIO RURAL LTDA','Atividade principal':'Comercialização de insumos agrícolas e produtos do agronegócio'},
+assembleias:[{data:'18/12/2023',pauta:'Ajustes estruturais, cronograma e segurança da operação',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:10,nome:'CRA Ura Agro II — 10ª Emissão',devedor:'URA AGRO FIDC',status:'Encerrada',
+info:{'Número da emissão':'10ª','Código ISIN':'BRCESCCRA0N5','Código IF':'CRA02200EYX','Data de emissão':'21/11/2022','Volume emitido':'R$ 31.032.000,00','Taxa de remuneração':'23,31% a.a.','Classes':'Série única','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'446192-4','Lastro':LU,'Garantias':GU},
+prest:P.P1,
+lim:L1,
+cov:CV_EVA,
+perfil:PF_URA,
+assembleias:[{data:'14/02/2023',pauta:'Resgate antecipado',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:11,nome:'CRA Alvoar — 11ª Emissão',devedor:'ALVOAR LACTEOS S/A',status:'Vigente',
+info:{'Número da emissão':'11ª','Código ISIN':'1ª: BRCESCCRA0L9 / 2ª: BRCESCCRA0M7','Código IF':'CRA02200E76','Data de emissão':'22/11/2022','Data de vencimento':'1ª série: 30/12/2026 / 2ª série: 29/12/2025','Volume emitido':'R$ 50.000.000,00','Taxa de remuneração':'CDI + 3%','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':'Bradesco','Conta centralizadora':'446176-2','Conta vinculada':'90700-6','Lastro':'CDCA','Garantias':'Recebíveis (Contrato) + Aval','Destinação dos recursos':'Financiamento e capital de giro da atividade agroindustrial — compra de grãos, produção, estocagem','Prêmio de resgate antecipado':'1% ao ano'},
+prest:P.P4,
+lim:{'Concentração':'Mitigação de risco por mecanismos corporativos e financeiros (sem critérios de concentração tradicionais).'},
+cov:[{nome:'Fluxo de recebíveis mensal',limite:'≥ 20% do saldo devedor da CPR-F (5º DU)',periodicidade:'Mensal'},{nome:'Cobertura semestral',limite:'≥ 120% do saldo das NCs',periodicidade:'Semestral'},{nome:'DTL/EBITDA',limite:'< 1,5x',periodicidade:'Anual'},{nome:'Liquidez',limite:'≥ 1,1x',periodicidade:'Anual'}],
+perfil:{'Razão social':'ALVOAR LACTEOS S/A','Atividade principal':'Agroindustrial — produção e comercialização de lácteos e derivados'},
+assembleias:[{data:'08/04/2025',pauta:'Aprovação das Demonstrações Financeiras',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:12,nome:'CRA Biopar — 12ª Emissão',devedor:'BIOPAR PRODUÇÃO DE BIODIESEL PARECIS LTDA',status:'Encerrada',
+info:{'Número da emissão':'12ª','Código ISIN':'SR: BRCESCCRA0R6 / JR: BRCESCCRA0S4','Código IF':'SR: CRA02200EYY / JR: CRA02200EYZ','Data de emissão':'26/11/2022','Volume emitido':'R$ 35.000.000,00','Taxa de remuneração':'SR: CDI + 5,20% / JR: CDI + 8,00%','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'446165-7','Conta vinculada':'86463-7','Lastro':'NC','Garantias':'Recebíveis (Contrato) + Aval','Destinação dos recursos':'Financiamento das operações agroindustriais da Biopar — aquisição de grãos, insumos e capital de giro','Prêmio de resgate antecipado':'2% ao ano'},
+prest:P.P5,
+lim:{'Concentração':'Operação 100% concentrada na Biopar (single name).'},
+cov:[{nome:'Cobertura mensal CF',limite:'≥ 20% do saldo das NCs (a partir de jul/2023)',periodicidade:'Mensal'},{nome:'Cobertura semestral',limite:'≥ 120% do saldo das NCs',periodicidade:'Semestral'},{nome:'DTL/EBITDA',limite:'< 1,5x',periodicidade:'Anual'}],
+perfil:{'Razão social':'BIOPAR PRODUÇÃO DE BIODIESEL PARECIS LTDA','Atividade principal':'Produção de biodiesel e aquisição de grãos'},
+assembleias:[{data:'23/01/2025',pauta:'Aprovação das DFs; alteração NC e CRA condicionada à venda de 100% das ações da Ceres pela Biopar',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:13,nome:'CRA Ura Agro III — 13ª Emissão',devedor:'URA AGRO FIDC',status:'Encerrada',
+info:{'Número da emissão':'13ª','Código ISIN':'BRCESCCRA0O3','Código IF':'CRA02200FFM','Data de emissão':'27/11/2022','Volume emitido':'R$ 22.526.000,00','Taxa de remuneração':'23,31% a.a.','Classes':'Série única','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'446147-9','Lastro':LU,'Garantias':GU},
+prest:P.P1,
+lim:L1,
+cov:CV_EVA,
+perfil:PF_URA,
+assembleias:[{data:'18/01/2024',pauta:'Resgate antecipado',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:14,nome:'CRA Ura Agro IV — 14ª Emissão',devedor:'URA AGRO FIDC',status:'Encerrada',
+info:{'Número da emissão':'14ª','Código ISIN':'BRCESCCRA0P0','Código IF':'CRA0230005L','Data de emissão':'18/01/2023','Volume emitido':'R$ 21.766.000,00','Taxa de remuneração':'23,05% a.a.','Classes':'Série única','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'446179-7','Lastro':LU,'Garantias':GU},
+prest:P.P1,
+lim:L1,
+cov:CV_EVA,
+perfil:PF_URA,
+assembleias:EA,contatos:EA,titulares:EA},
+{id:15,nome:'CRA Ura Agro V — 15ª Emissão',devedor:'URA AGRO FIDC',status:'Encerrada',
+info:{'Número da emissão':'15ª','Código ISIN':'BRCESCCRA0Q8','Código IF':'CRA0230005M','Data de emissão':'18/01/2023','Data de vencimento':'30/08/2024','Volume emitido':'R$ 21.694.000,00','Taxa de remuneração':'23,05% a.a.','Classes':'Série única','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'446182-7','Lastro':LU,'Garantias':GU},
+prest:P.P1,
+lim:L1,
+cov:CV_EVA,
+perfil:PF_URA,
+assembleias:[{data:'08/02/2023',pauta:'Alteração dados bancários Conta Centralizadora',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:16,nome:'CRA Ura Agro VI — 16ª Emissão',devedor:'URA AGRO FIDC',status:'Encerrada',
+info:{'Número da emissão':'16ª','Código ISIN':'BRCESCCRA0T2','Código IF':'CRA023006Y1','Data de emissão':'07/03/2023','Volume emitido':'R$ 18.189.000,00','Taxa de remuneração':'CDI + 1,49%','Classes':'Série única','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'446186-P','Lastro':LU,'Garantias':GU},
+prest:P.P1,
+lim:L1,
+cov:CV_EVA,
+perfil:PF_URA,
+assembleias:[{data:'28/03/2023',pauta:'Resgate antecipado',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:17,nome:'CRA Siap — 17ª Emissão',devedor:'SIAP COMÉRCIO DE PRODUTOS AGROPECUÁRIOS LTDA',status:'Encerrada',
+info:{'Número da emissão':'17ª','Código ISIN':'SR: BRCESCCRA0U0 / JR: BRCESCCRA0V8','Código IF':'SR: CRA0230080X / JR: CRA0230086H','Data de emissão':'29/03/2023','Volume emitido':'R$ 30.000.000,00','Taxa de remuneração':'SR: CDI + 4,50% / JR: 1%','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'445525-8','Lastro':'CDCA','Garantias':'Cessão Fiduciária + Aval dos Sócios','Prêmio de resgate antecipado':'3% ao ano'},
+prest:P.P1,
+lim:{'5 maiores (individual)':'≤ 20% do VMG e 4% individualmente','Novos clientes':'≤ 10% do Valor Total da Emissão','Partes relacionadas':'≤ 10% da soma dos DCs'},
+cov:[{nome:'VMG',limite:'≥ 100%',periodicidade:'Mensal'},{nome:'Fundo de Retenção',limite:'Mínimo 1,5% da emissão — recomposto a cada uso',periodicidade:'Contínuo'},{nome:'D90+',limite:'Inadimplidos > Sub = EVA automático',periodicidade:'Mensal'}],
+perfil:{'Razão social':'SIAP COMÉRCIO DE PRODUTOS AGROPECUÁRIOS LTDA','Atividade principal':'Comercialização de insumos e produtos agropecuários'},
+assembleias:[{data:'13/05/2025',pauta:'Verificação de covenants e enquadramento',deliberacao:'Ver ata de deliberação'}],contatos:[],titulares:[]},
+{id:18,nome:'CRA Ura Agro VII — 18ª Emissão',devedor:'URA AGRO FIDC',status:'Encerrada',
+info:{'Número da emissão':'18ª','Código ISIN':'BRCESCCRA0W6','Código IF':'CRA02300BKP','Data de emissão':'04/05/2023','Volume emitido':'R$ 22.951.000,00','Taxa de remuneração':'20,20% a.a.','Classes':'Série única','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'445528-2','Lastro':LU,'Garantias':GU},
+prest:P.P2,
+lim:L1,
+cov:CV_EVA,
+perfil:PF_URA,
+assembleias:EA,contatos:EA,titulares:EA},
+{id:19,nome:'CRA Ura Agro VIII — 19ª Emissão',devedor:'URA AGRO FIDC',status:'Encerrada',
+info:{'Número da emissão':'19ª','Código ISIN':'SR: BRCESCCRA0X4 / JR: BRCESCCRA0Y2','Código IF':'SR: CRA02300E75 / JR: CRA02300E76','Data de emissão':'25/05/2023','Volume emitido':'R$ 17.000.000,00','Taxa de remuneração':'SR: 20,14% / JR: 24,14%','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'446189-4','Lastro':LU,'Garantias':GU},
+prest:P.P2,
+lim:L1,
+cov:CV_EVA,
+perfil:PF_URA,
+assembleias:EA,contatos:EA,titulares:EA},
+{id:20,nome:'CRA Jatobá — 20ª Emissão',devedor:'LUIZ A. DE MOURA CASTRO JATOBÁ',status:'Vigente',
+info:{'Número da emissão':'20ª','Código ISIN':'SR: BRCESCCRA0Z9 / JR: BRCESCCRA108','Código IF':'SR: CRA02300ENT / JR: CRA02300ETD','Data de emissão':'31/05/2023','Volume emitido':'R$ 15.000.000,00','Taxa de remuneração':'SR: CDI + 6,15% / JR: CDI + 4,00%','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'445531-2','Conta vinculada':'0226459-6','Lastro':'CPR-F','Garantias':'AF de imóvel; Cessão Fiduciária de Direitos Creditórios; Aval','Destinação dos recursos':'Gestão ordinária — produção e comercialização de cana de açúcar','Prêmio de resgate antecipado':'Não há'},
+prest:P.P2,
+lim:L1,
+cov:[{nome:'VMG',limite:'≥ 100%',periodicidade:'Mensal'},{nome:'Reforço de garantia',limite:'10 dias úteis após notificação',periodicidade:'Sob demanda'},{nome:'Alienação fiduciária de imóvel',limite:'Cobertura ≥ Valor Mínimo de Cobertura',periodicidade:'Anual'}],
+perfil:{'Razão social':'LUIZ A. DE MOURA CASTRO JATOBÁ','Atividade principal':'Produtor rural — produção e comercialização de cana de açúcar'},
+assembleias:[{data:'08/07/2025',pauta:'Ver ata de deliberação das DFs',deliberacao:'Ver ata'}],contatos:[],titulares:[]},
+{id:21,nome:'CRA Ura Agro IX — 21ª Emissão',devedor:'URA AGRO FIDC',status:'Encerrada',
+info:{'Número da emissão':'21ª','Código ISIN':'SR: BRCESCCRA116 / JR: BRCESCCRA124','Código IF':'SR: CRA02300FL5 / JR: CRA02300FL6','Data de emissão':'13/06/2023','Volume emitido':'R$ 35.000.000,00','Taxa de remuneração':'SR: 20,83% / JR: 27,83%','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'446202-5','Lastro':LU,'Garantias':GU},
+prest:P.P2,
+lim:L1,
+cov:CV_EVA,
+perfil:PF_URA,
+assembleias:EA,contatos:EA,titulares:EA},
+{id:22,nome:'CRA Portal Agro — 22ª Emissão',devedor:'PORTAL AGRO COMÉRCIO E SERVIÇOS LTDA',status:'Inadimplente',
+info:{'Número da emissão':'22ª','Código ISIN':'SR1: BRCESCCRA140 / SR2: BRCESCCRA157 / SUB: BRCESCCRA165','Código IF':'SR1: CRA02300GTL / SR2: CRA02300GTM / SUB: CRA02300GZ5','Data de emissão':'27/06/2023','Volume emitido':'R$ 122.247.000,00','Taxa de remuneração':'SR1: IPCA + 9,00% / SR2: CDI + 6,00% / SUB: 100% CDI','Classes':'1-2-3','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'445538-P','Lastro':'CDCA','Garantias':'Cessão Fiduciária + Aval (JARL Agropecuária, ELM Agropecuária, IRDB Holding, Gilson, Gilberto Maraschin e Rafael Bogo)','Destinação dos recursos':'Capital de giro para comercialização de insumos agrícolas — Portal Agro','Prêmio de resgate antecipado':'3% ao ano'},
+prest:P.P2,
+lim:{'Nenhum devedor':'> 10% da carteira total','Top 5 devedores':'≤ 35% da carteira','Partes relacionadas':'≤ 5% da carteira','DC com venc. > 180 dias':'≤ 25% da carteira','Por Estado':'≤ 40% da carteira','Grupo econômico':'≤ 15% da carteira'},
+cov:[{nome:'DTL/EBITDA',limite:'≤ 4,3x (apuração anual com auditores independentes)',periodicidade:'Anual'},{nome:'VMG',limite:'≥ 100%',periodicidade:'Mensal'},{nome:'D90+',limite:'Inadimplidos > Sub Jr = EVA automático',periodicidade:'Mensal'}],
+perfil:{'Razão social':'PORTAL AGRO COMÉRCIO E SERVIÇOS LTDA','Atividade principal':'Comercialização de insumos agrícolas e capital de giro'},
+assembleias:[{data:'04/06/2025',pauta:'Recovery — sustação de efeitos do vencimento antecipado dos CDCA e resgate obrigatório dos CRA',deliberacao:'Em andamento'}],contatos:[],titulares:[]},
+{id:23,nome:'CRA NOOA — 23ª Emissão',devedor:'NOOA CIÊNCIA E TECNOLOGIA LTDA',status:'Vigente',
+info:{'Número da emissão':'23ª','Código ISIN':'BRCESCCRA132','Código IF':'CRA02300GIH','Data de emissão':'02/07/2023','Volume emitido':'R$ 70.000.000,00','Taxa de remuneração':'CDI + 5%','Classes':'Série única','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'446195-9','Lastro':'CDCA','Garantias':'Recebíveis (Contrato) + Aval','Destinação dos recursos':'Financiamento da cadeia produtiva de insumos agrícolas e capital de giro da NOOA','Prêmio de resgate antecipado':'2% ao ano'},
+prest:P.P2,
+lim:{'Concentração':'100% em único devedor (NOOA) — operação single name.'},
+cov:[{nome:'Razão de garantia',limite:'≥ 110%',periodicidade:'Mensal'},{nome:'VMG',limite:'≥ 100%',periodicidade:'Mensal'},{nome:'Fundo de despesas',limite:'Recomposição pendente — notificação a formalizar',periodicidade:'Anual'}],
+perfil:{'Razão social':'NOOA CIÊNCIA E TECNOLOGIA LTDA','Atividade principal':'Insumos agrícolas e tecnologia para o agronegócio'},
+assembleias:EA,contatos:EA,titulares:EA},
+{id:24,nome:'CRA Ura Agro X — 24ª Emissão',devedor:'URA AGRO FIDC',status:'Encerrada',
+info:{'Número da emissão':'24ª','Código ISIN':'SR: BRCESCCRA173 / JR: BRCESCCRA181','Código IF':'SR: CRA02300KIX / JR: CRA02300KIY','Data de emissão':'04/08/2023','Volume emitido':'R$ 25.000.000,00','Taxa de remuneração':'SR: 20,38% / JR: 28,88%','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'446212-2','Lastro':LU,'Garantias':GU},
+prest:P.P2,
+lim:L1,
+cov:CV_EVA,
+perfil:PF_URA,
+assembleias:[{data:'02/07/2025',pauta:'Resgate antecipado',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:25,nome:'CRA Eloagrícola — 25ª Emissão',devedor:'ELOAGRÍCOLA COMÉRCIO REPRESENTAÇÃO LTDA',status:'Vigente',
+info:{'Número da emissão':'25ª','Código ISIN':'SR: BRCESCCRA199 / JR: BRCESCCRA1A0','Código IF':'SR: CRA02300O8D / JR: CRA02300O8E','Data de emissão':'05/09/2023','Volume emitido':'R$ 30.000.000,00','Taxa de remuneração':'SR: CDI + 6% / JR: CDI + 7%','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'446215-7','Lastro':'CDCA','Garantias':'Cessão Fiduciária + Aval (Baltazar dos Reis Alves; Luiz Antonio Flor; Eduardo Batista de Castro Jr.)','Prêmio de resgate antecipado':'3% ao ano'},
+prest:P.P2,
+lim:{'6 maiores (conjunto)':'≤ 30% do VMG','6 maiores (individual)':'≤ 5% do VMG','Demais clientes':'≤ 3% do VMG','Partes relacionadas':'≤ 10% do Valor Total da Emissão'},
+cov:[{nome:'VMG',limite:'≥ 100%',periodicidade:'Mensal'},{nome:'D90+',limite:'Inadimplidos > Sub Jr = EVA automático',periodicidade:'Mensal'},{nome:'Déficit de garantia',limite:'Idalicio e Tiago cientes — verificar com Erika (servicer)',periodicidade:'Mensal'}],
+perfil:{'Razão social':'ELOAGRÍCOLA COMÉRCIO REPRESENTAÇÃO LTDA','Atividade principal':'Comercialização de insumos agrícolas'},
+assembleias:[{data:'08/09/2025',pauta:'Vencimento antecipado CDCA por violação de covenants e obrigações contratuais — Ceres e AF autorizados a agir',deliberacao:'Em deliberação'}],contatos:[],titulares:[]},
+{id:26,nome:'CRA Ura Agro XI — 26ª Emissão',devedor:'URA AGRO FIDC',status:'Encerrada',
+info:{'Número da emissão':'26ª','Código ISIN':'SR: BRCESCCRA1B8 / JR: BRCESCCRA1C6','Código IF':'SR: CRA02300OJD / JR: CRA02300OJE','Data de emissão':'08/09/2023','Volume emitido':'R$ 25.400.000,00','Taxa de remuneração':'SR: 17% / JR: 22,70%','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'446219-P','Lastro':LU,'Garantias':GU},
+prest:P.P2,
+lim:L1,
+cov:CV_EVA,
+perfil:PF_URA,
+assembleias:[{data:'19/03/2024',pauta:'Ver ata de deliberação',deliberacao:'Ver ata'}],contatos:[],titulares:[]},
+{id:27,nome:'CRA Ura Agro XII — 27ª Emissão',devedor:'URA AGRO FIDC',status:'Encerrada',
+info:{'Número da emissão':'27ª','Código ISIN':'BRCESCCRA1H5','Código IF':'CRA02300SV2','Data de emissão':'11/09/2023','Volume emitido':'R$ 10.118.000,00','Taxa de remuneração':'CDI + 4,5%','Classes':'Série única','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'446223-8','Lastro':LU,'Garantias':GU},
+prest:P.P2,
+lim:L1,
+cov:CV_EVA,
+perfil:PF_URA,
+assembleias:[{data:'04/04/2024',pauta:'Falta Dação em pgto (Leo); Custódia das Sub; Sites; OS; CERC',deliberacao:'Em acompanhamento'}],contatos:[],titulares:[]},
+{id:28,nome:'CRA Ura Agro XIII — 28ª Emissão',devedor:'URA AGRO FIDC',status:'Vigente',
+info:{'Número da emissão':'28ª','Código ISIN':'BRCESCCRA1I3','Código IF':'CRA02300SV5','Data de emissão':'11/09/2023','Volume emitido':'R$ 9.938.000,00','Taxa de remuneração':'CDI + 4,5%','Classes':'Série única','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'446209-2','Lastro':LU,'Garantias':GU},
+prest:P.P2,
+lim:L1,
+cov:CV_EVA,
+perfil:PF_URA,
+assembleias:EA,contatos:EA,titulares:EA},
+{id:29,nome:'CRA Ura Agro XIV — 29ª Emissão',devedor:'URA AGRO FIDC',status:'Encerrada',
+info:{'Número da emissão':'29ª','Código ISIN':'1ª: BRCESCCRA1F9 / 2ª: BRCESCCRA1G7 / 3ª: BRCESCCRA223 / 4ª: BRCESCCRA231','Código IF':'1ª: CRA02300SE9 / 2ª: CRA02300SJT / 3ª: CRA02400ANL / 4ª: CRA02400ANM','Data de emissão':'10/09/2023','Volume emitido':'1ª-2ª: R$ 25.400.000,00 | 3ª-4ª: R$ 28.586.000,00','Taxa de remuneração':'1ª: 15% / 2ª: 21,50% / 3ª: 15% / 4ª: 17,50%','Classes':'1-2 (+ série adicional 3-4)','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'446209-2','Lastro':LU,'Garantias':GU},
+prest:{'Agente fiduciário':'Oliveira Trust','Banco liquidante':BLV,'Agente de cobrança':'Ceres Investimentos','Escriturador':'Vórtx','Coordenador líder':'Guide Investimentos / Ceres Securitizadora'},
+lim:L1,
+cov:CV_EVA,
+perfil:PF_URA,
+assembleias:[{data:'12/04/2025',pauta:'Autorização resgate antecipado total da 3ª série; Amex da 2ª e 4ª série',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:30,nome:'CRA Ura Agro XV — 30ª Emissão',devedor:'URA AGRO FIDC',status:'Encerrada',
+info:{'Número da emissão':'30ª','Código ISIN':'1ª: BRCESCCRA1F9 / 2ª: BRCESCCRA1G7 / 3ª: BRCESCCRA207 / 4ª: BRCESCCRA215','Código IF':'1ª: CRA02300SJU / 2ª: CRA02300SJV / 3ª: CRA02400ACA / 4ª: CRA02400ACB','Data de emissão':'10/09/2023','Volume emitido':'R$ 25.400.000,00','Taxa de remuneração':'1ª: 15% / 2ª: 21,50% / 3ª: 15% / 4ª: 17,50%','Classes':'1-2 (+ série adicional 3-4)','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'0099895-4','Lastro':LU,'Garantias':GU},
+prest:{'Agente fiduciário':'Oliveira Trust','Banco liquidante':BLV,'Agente de cobrança':'Ceres Investimentos','Escriturador':'Vórtx','Coordenador líder':'Guide Investimentos / Ceres Securitizadora'},
+lim:L1,
+cov:CV_EVA,
+perfil:PF_URA,
+assembleias:[{data:'12/04/2025',pauta:'Autorização resgate antecipado total da 3ª série; Amex da 2ª e 4ª série',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:31,nome:'CRA Agrodinâmica — 31ª Emissão',devedor:'AGRODINÂMICA COMÉRCIO E REPRESENTAÇÕES LTDA',status:'Cancelada',
+info:{'Número da emissão':'31ª','Código ISIN':'SR: BRCESCCRA1L7 / JR: BRCESCCRA1M5','Código IF':'SR: CRA02300TSE / JR: CRA02300TXT','Data de emissão':'19/09/2023','Volume emitido':'R$ 25.000.000,00','Taxa de remuneração':'SR: CDI + 5,5% / JR: 1%','Tipo de oferta':TO1,'Banco liquidante':BLV,'Conta centralizadora':'26505-7','Lastro':'CDCA','Garantias':'Cessão Fiduciária + Aval','Status':'CANCELADA'},
+prest:P.P1,
+lim:L1,
+cov:[],perfil:{'Razão social':'AGRODINÂMICA COMÉRCIO E REPRESENTAÇÕES LTDA','Status operacional':'Cancelada'},
+assembleias:EA,contatos:EA,titulares:EA},
+{id:32,nome:'CRA Cultura — 32ª Emissão',devedor:'CULTURA AGRONEGÓCIOS LTDA',status:'Cancelada',
+info:{'Número da emissão':'32ª','Código ISIN':'SR: BRCESCCRA1J1 / JR: BRCESCCRA1K9','Código IF':'SR: CRA02300U3D / JR: CRA02300U3E','Data de emissão':'17/09/2023','Volume emitido':'R$ 50.000.000,00','Taxa de remuneração':'SR: CDI + 6% / JR: 1%','Tipo de oferta':TO1,'Banco liquidante':BLV,'Conta centralizadora':'26556-0','Lastro':'CDCA','Garantias':'Cessão Fiduciária + Aval','Status':'CANCELADA'},
+prest:P.P2,
+lim:L1,
+cov:[],perfil:{'Razão social':'CULTURA AGRONEGÓCIOS LTDA','Status operacional':'Cancelada'},
+assembleias:EA,contatos:EA,titulares:EA},
+{id:33,nome:'CRA Agro Boa Esperança — 33ª Emissão',devedor:'AGRO BOA ESPERANÇA COMÉRCIO DE PRODUTOS AGROPECUÁRIOS LTDA',status:'Encerrada',
+info:{'Número da emissão':'33ª','Código ISIN':'SR: BRCESCCRA1N3 / JR: BRCESCCRA1O1','Código IF':'SR: CRA02300UV5 / JR: CRA02300UV6','Data de emissão':'26/09/2023','Volume emitido':'R$ 10.000.000,00','Taxa de remuneração':'SR: CDI + 8% / JR: 1% a.a.','Classes':'1-2','Tipo de oferta':TO1,'Banco liquidante':BLV,'Conta centralizadora':'26504-0','Lastro':'CDCA','Garantias':'Cessão Fiduciária + Aval pessoal de Jucilene de Castro','Prêmio de resgate antecipado':'3% ao ano'},
+prest:P.P2,
+lim:L1,
+cov:[{nome:'VMG',limite:'≥ 100%',periodicidade:'Mensal'},{nome:'D90+',limite:'Inadimplidos > Sub = EVA automático',periodicidade:'Mensal'}],
+perfil:{'Razão social':'AGRO BOA ESPERANÇA COMÉRCIO DE PRODUTOS AGROPECUÁRIOS LTDA','Atividade principal':'Capital de giro para comercialização de produtos agropecuários'},
+assembleias:[{data:'27/05/2025',pauta:'Aprovação das Demonstrações Financeiras',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:34,nome:'CRA Nativa — 34ª Emissão',devedor:'NATIVA AGRONEGÓCIOS LTDA',status:'Vigente',
+info:{'Número da emissão':'34ª','Código ISIN':'SR: BRCESCCRA1P8 / JR: BRCESCCRA1Q6','Código IF':'SR: CRA02300VMY / JR: CRA02300VMZ','Data de emissão':'06/10/2023','Volume emitido':'R$ 21.000.000,00','Taxa de remuneração':'SR: CDI + 6% / JR: 1% a.a.','Classes':'1-2','Tipo de oferta':TO1,'Banco liquidante':BLV,'Conta centralizadora':'446182-7','Lastro':'CDCA','Garantias':'Cessão Fiduciária + Aval sócios','Prêmio de resgate antecipado':'3% ao ano'},
+prest:P.P2,
+lim:L1,
+cov:[{nome:'VMG',limite:'≥ 100%',periodicidade:'Mensal'},{nome:'Enquadramento de covenants',limite:'Verificar performance com servicer (Leo)',periodicidade:'Mensal'}],
+perfil:{'Razão social':'NATIVA AGRONEGÓCIOS LTDA','Atividade principal':'Comercialização de insumos agrícolas (fertilizantes, defensivos, sementes e corretivos)'},
+assembleias:[{data:'27/03/2025',pauta:'Aprovação das Demonstrações Financeiras',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:35,nome:'CRA Ura Agro XVI — 35ª Emissão',devedor:'URA AGRO FIDC',status:'Encerrada',
+info:{'Número da emissão':'35ª','Código ISIN':'SR: BRCESCCRA1R4 / JR: BRCESCCRA1S2','Código IF':'SR: CRA024001JO / JR: CRA024001JQ','Data de emissão':'14/09/2023','Volume emitido':'R$ 51.000.000,00','Taxa de remuneração':'SR: 13,78% / JR: 16,62%','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'0099890-5','Lastro':LU,'Garantias':GU},
+prest:P.P2,
+lim:L1,
+cov:CV_EVA,
+perfil:PF_URA,
+assembleias:[{data:'23/04/2025',pauta:'Resgate total',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:36,nome:'CRA Ura Agro XVII — 36ª Emissão',devedor:'URA AGRO FIDC',status:'Inadimplente',
+info:{'Número da emissão':'36ª','Código ISIN':'SR: BRCESCCRA1T0 / JR: BRCESCCRA1U8','Código IF':'SR: CRA02400335 / JR: CRA02400336','Data de emissão':'11/10/2023','Volume emitido':'R$ 33.230.000,00','Taxa de remuneração':'SR: 14,37% / JR: 18,79%','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'0099887-1','Lastro':LU,'Garantias':GU},
+prest:P.P2,
+lim:L1,
+cov:[{nome:'Recovery',limite:'Em acompanhamento',periodicidade:'Contínuo'}],
+perfil:PF_URA,
+assembleias:[{data:'19/06/2025',pauta:'Recovery',deliberacao:'Em andamento'}],contatos:[],titulares:[]},
+{id:37,nome:'CRA Ruiz — 37ª Emissão',devedor:'JOÃO RUIZ LOURENÇO',status:'Vigente',
+info:{'Número da emissão':'37ª','Código ISIN':'BRCESCCRA1Z7','Código IF':'CRA0240093U','Data de emissão':'21/05/2023','Volume emitido':'R$ 70.000.000,00','Taxa de remuneração':'CDI + 6%','Classes':'Série única','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'26505-7','Conta vinculada':'532947-9','Lastro':'CPR-F','Garantias':'Aval pessoal dos sócios; alienação fiduciária de imóvel; penhor e cessão fiduciária de DCs','Destinação dos recursos':'Financiamento direto da cadeia do café — produção, beneficiamento e comercialização','Prêmio de resgate antecipado':'3% ao ano'},
+prest:{'Agente fiduciário':'Oliveira Trust','Banco liquidante':BLV,'Agente de cobrança':'Ceres Investimentos','Escriturador':'Vórtx','Coordenador líder':'Ceres Securitizadora'},
+lim:{'Exposição máxima':'100% ao Devedor João Ruiz Lourenço','Vedação':'Cessão a partes relacionadas','Novas cessões':'Até 20% por cliente'},
+cov:[{nome:'VMG',limite:'≥ 100%',periodicidade:'Mensal'},{nome:'AF de imóvel',limite:'Cobertura ≥ Valor Mínimo de Cobertura',periodicidade:'Anual'}],
+perfil:{'Razão social':'JOÃO RUIZ LOURENÇO','Atividade principal':'Produtor rural — cadeia do café (produção, beneficiamento, comercialização)'},
+assembleias:EA,contatos:EA,titulares:EA},
+{id:38,nome:'CRA Ura Agro XVIII — 38ª Emissão',devedor:'URA AGRO FIDC',status:'Encerrada',
+info:{'Número da emissão':'38ª','Código ISIN':'SR: BRCESCCRA1V6 / JR: BRCESCCRA1W4','Código IF':'SR: CRA024007Q1 / JR: CRA024007Q2','Data de emissão':'18/01/2024','Volume emitido':'R$ 30.000.000,00','Taxa de remuneração':'SR: 16,60% / JR: 20,12%','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'0099888-9','Lastro':LU,'Garantias':GU},
+prest:P.P3,
+lim:L1,
+cov:CV_EVA,
+perfil:PF_URA,
+assembleias:EA,contatos:EA,titulares:EA},
+{id:39,nome:'CRA Valoriza — 39ª Emissão',devedor:'VALORIZA AGRONEGÓCIOS S/A',status:'Vigente',
+info:{'Número da emissão':'39ª','Código ISIN':'SR: BRCESCCRA1X2 / JR: BRCESCCRA1Y0','Código IF':'SR: CRA024007VH / JR: CRA024007VI','Data de emissão':'08/10/2023','Volume emitido':'R$ 54.400.000,00','Taxa de remuneração':'SR: CDI + 5,50% / JR: CDI + 6,00%','Classes':'1-2','Tipo de oferta':TO1,'Banco liquidante':BLV,'Conta centralizadora':'0099893-9','Lastro':'CPR-F','Garantias':'Cessão Fiduciária + Aval (Valoriza Participações e Sócios)','Destinação dos recursos':'Produção e comercialização de eucalipto e produtos agroflorestais','Prêmio de resgate antecipado':'2% ao ano'},
+prest:P.P3,
+lim:{'Top 10 clientes':'≤ 25% do VMG','Cliente individual':'≤ 5% do VMG','Demais clientes':'≤ 3% do VMG'},
+cov:[{nome:'VMG',limite:'≥ 100%',periodicidade:'Mensal'},{nome:'Razão de garantia',limite:'≥ 110%',periodicidade:'Mensal'},{nome:'Data de Interrupção Programada',limite:'Automaticamente em 08/06/2028',periodicidade:'Data limite'}],
+perfil:{'Razão social':'VALORIZA AGRONEGÓCIOS S/A','Atividade principal':'Produção e comercialização de eucalipto e produtos agroflorestais'},
+assembleias:[{data:'18/10/2025',pauta:'Amortização Extraordinária Obrigatória CRA 1ª Série; recompra e substituição de garantias até 31/10/2025',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:40,nome:'CRA Elo Agronegócios — 40ª Emissão',devedor:'ELO AGRONEGÓCIOS LTDA',status:'Vigente',
+info:{'Número da emissão':'40ª','Código ISIN':'SR: BRCESCCRA249 / JR: BRCESCCRA256','Código IF':'SR: CRA02400B43 / JR: CRA02400B9M','Data de emissão':'30/09/2023','Volume emitido':'R$ 60.000.000,00','Taxa de remuneração':'SR: CDI + 5,00% / JR: 100% CDI','Classes':'1-2','Tipo de oferta':TO1,'Banco liquidante':BLV,'Conta centralizadora':'0099882-2','Lastro':'CPR-F','Garantias':'(i) garantias reais/fiduciárias sobre o lastro; (ii) garantias pessoais dos sócios da Elo','Destinação dos recursos':'Atividades operacionais rurais e comerciais da Elo','Prêmio de resgate antecipado':'3% ao ano'},
+prest:P.P3,
+lim:{'Concentração máxima individual':'10% da carteira','Partes relacionadas':'Não elegíveis','Grupo econômico Elo':'Não elegível','Top 5':'Ideal < 50% total'},
+cov:[{nome:'VMG',limite:'≥ 100%',periodicidade:'Mensal'},{nome:'Enquadramento de covenants',limite:'Rodar performance — verificar índices (Servicer); Vanilzo para entendimento da operação',periodicidade:'Mensal'}],
+perfil:{'Razão social':'ELO AGRONEGÓCIOS LTDA','Atividade principal':'Operações rurais e comerciais do agronegócio'},
+assembleias:[{data:'07/11/2025',pauta:'Alteração de cláusulas do Termo de Endosso',deliberacao:'Aprovado'}],contatos:[],titulares:[]},
+{id:41,nome:'CRA Ceres | Ura Agro XIX — 41ª Emissão',devedor:'URA AGRO FIDC',status:'Vigente',
+info:{'Número da emissão':'41ª','Código ISIN':'SR: BRCESCCRA264 / JR: BRCESCCRA272','Código IF':'SR: CRA02500209 / JR: CRA0250020A','Data de emissão':'22/10/2023','Volume emitido':'R$ 27.680.000,00','Taxa de remuneração':'SR: 20,50% / JR: Em forma de prêmio','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'0099889-7','Lastro':LU,'Garantias':GU},
+prest:P.P3,
+lim:L1,
+cov:CV_EVA,
+perfil:PF_URA,
+assembleias:EA,contatos:EA,titulares:EA},
+{id:42,nome:'CRA Gurupi — 42ª Emissão',devedor:'A.A. FARIA COMÉRCIO E INDÚSTRIA DE SEMENTES LTDA',status:'Vigente',
+info:{'Número da emissão':'42ª','Código ISIN':'1ª: BRCESCCRA280 / 2ª: BRCESCCRA298 / 3ª: BRCESCCRA2A8 / 4ª: Não informado','Código IF':'1ª: CRA0250038P / 2ª: CRA0250038Q / 3ª: CRA0250038R / 4ª: N/A','Data de emissão':'26/11/2023','Volume emitido':'R$ 1.000.000.000,00','Taxa de remuneração':'1ª-3ª: 110% CDI / 4ª: Sem remuneração','Classes':'1-2-3-4','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'0099881-4','Lastro':LU,'Garantias':GU},
+prest:{'Agente fiduciário':'Vórtx','Banco liquidante':BLV,'Agente de cobrança':'Ceres Investimentos','Escriturador':'Vórtx','Coordenador líder':'BTG Pactual'},
+lim:{'Sacado individual':'≤ 20% do saldo total de DCs','Grupo econômico de sacados':'≤ 30% do saldo total','Partes relacionadas':'≤ 10% do saldo total'},
+cov:[{nome:'VMG',limite:'Necessário R$ 16MM de títulos em carteira — tratar com comercial. Totalmente desenquadrada.',periodicidade:'Mensal'},{nome:'Semente Control Union',limite:'OK — garantias não enquadradas',periodicidade:'Mensal'}],
+perfil:{'Razão social':'A.A. FARIA COMÉRCIO E INDÚSTRIA DE SEMENTES LTDA','Atividade principal':'Comércio e industrialização de sementes / aquisição de DCs do agronegócio'},
+assembleias:EA,contatos:EA,titulares:EA},
+{id:43,nome:'CRA Carteira I — 43ª Emissão',devedor:'Pulverizado',status:'Vigente',
+info:{'Número da emissão':'43ª','Código ISIN':'SR: BRCESCCRA2B6 / JR: Em processo de cetipagem','Código IF':'SR: CRA0250040H / JR: Em processo de cetipagem','Volume emitido':'R$ 62.500.000,00','Taxa de remuneração':'SR: CDI + 5,00% / JR: 100% CDI','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'0099879-8','Lastro':'Recebíveis','Garantias':'Lastro + RF','Destinação dos recursos':'Aquisição de Direitos Creditórios do Agronegócio'},
+prest:P.P3,
+lim:{'Concentração':'Não há previsão expressa de limites de concentração.'},
+cov:[{nome:'VMG',limite:'≥ 100%',periodicidade:'Mensal'}],
+perfil:{'Razão social':'Carteira pulverizada — múltiplos cedentes e devedores','Observação':'OBSERVAÇÕES: PERFORMANCE (SERVICER); EVENTOS DE PGTOS JUROS (SERVICER) — AMEX CRA CARTEIRA'},
+assembleias:EA,contatos:EA,titulares:EA},
+{id:44,nome:'CRA Carteira II — 44ª Emissão',devedor:'Pulverizado',status:'Vigente',
+info:{'Número da emissão':'44ª','Código ISIN':'SR: BRCESCCRA2D2 / JR: BRCESCCRA2E0','Código IF':'SR: CRA02500B41 / JR: CRA02500B42','Volume emitido':'R$ 40.000.000,00','Taxa de remuneração':'SR: 25,30% a.a. / JR: Em forma de prêmio','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'26556-0','Lastro':'Recebíveis','Garantias':'Lastro + RF'},
+prest:P.P3,
+lim:{'Concentração':'Não há previsão expressa de limites de concentração.'},
+cov:[{nome:'VMG',limite:'≥ 100%',periodicidade:'Mensal'}],
+perfil:{'Razão social':'Carteira pulverizada — múltiplos cedentes e devedores'},
+assembleias:EA,contatos:EA,titulares:EA},
+{id:45,nome:'CRA Carteira III — 45ª Emissão',devedor:'Pulverizado',status:'Vigente',
+info:{'Número da emissão':'45ª','Código ISIN':'SR: BRCESCCRA2F7 / JR: BRCESCCRA2G5','Código IF':'SR: CRA02500B43 / JR: CRA02500B46','Volume emitido':'R$ 40.000.000,00','Taxa de remuneração':'SR: 23,40% a.a. / JR: Em forma de prêmio','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'0099892-1','Lastro':'Recebíveis','Garantias':'Lastro + RF'},
+prest:P.P3,
+lim:{'Concentração':'Não há previsão expressa de limites de concentração.'},
+cov:[{nome:'VMG',limite:'≥ 100%',periodicidade:'Mensal'}],
+perfil:{'Razão social':'Carteira pulverizada — múltiplos cedentes e devedores'},
+assembleias:EA,contatos:EA,titulares:EA},
+{id:46,nome:'CRA Carteira IV — 46ª Emissão',devedor:'Pulverizado',status:'Vigente',
+info:{'Número da emissão':'46ª','Código ISIN':'SR: BRCESCCRA2H3 / JR: BRCESCCRA2I1','Código IF':'SR: CRA02500B47 / JR: CRA02500B48','Volume emitido':'R$ 40.000.000,00','Taxa de remuneração':'SR: 26% a.a. / JR: Em forma de prêmio','Classes':'1-2','Tipo de oferta':TO2,'Banco liquidante':BLV,'Conta centralizadora':'0099880-6','Lastro':'Recebíveis','Garantias':'Lastro + RF'},
+prest:P.P3,
+lim:{'Concentração':'Não há previsão expressa de limites de concentração.'},
+cov:[{nome:'VMG',limite:'≥ 100%',periodicidade:'Mensal'}],
+perfil:{'Razão social':'Carteira pulverizada — múltiplos cedentes e devedores'},
+assembleias:EA,contatos:EA,titulares:EA}
+];
+const TABS=[
+{id:'info',label:'Informações do ativo'},
+{id:'prest',label:'Prestadores de serviço'},
+{id:'lim',label:'Limites de concentração'},
+{id:'cov',label:'Covenants'},
+{id:'perfil',label:'Perfil da empresa — cedente/devedor'},
+{id:'assembleias',label:'Assembleias'},
+{id:'contatos',label:'Contato com investidores'},
+{id:'titulares',label:'Principais titulares'}
+];
+function sc(s){if(s==='Vigente')return 's-at';if(s==='Inadimplente')return 's-in';if(s==='Cancelada')return 's-ca';return 's-li';}
+function isEncerrado(s){return['Encerrada','Encerrado','Cancelada'].includes(s);}
+function fv(v){return v?`<span class="fval">${v}</span>`:`<span class="fval em">—</span>`;}
+function fields(o){return Object.entries(o).map(([k,v])=>`<div class="frow"><span class="flabel">${k}</span>${fv(v)}</div>`).join('');}
+function tblA(rows,aid){
+const hasData=rows&&rows.length>0;
+const d=hasData?rows:Array(2).fill({data:'',pauta:'',deliberacao:'',hist:''});
+return `<div class="tbl-section"><div class="tbl-wrap"><table class="dtbl">
+<thead><tr><th></th><th style="min-width:90px">Data</th><th style="min-width:180px">Pauta</th><th style="min-width:180px">Deliberação</th><th style="min-width:80px">Histórico</th></tr></thead>
+<tbody>${d.map((r,i)=>{
+const filled=hasData&&r.data;
+const histBtn=filled?`<button class="hist-btn" data-aid="${aid}" data-idx="${i}" title="Ver/editar histórico">📝 detalhes</button>`:'—';
+const histExp=r.hist?`<div class="hist-expanded">${r.hist}</div>`:'';
+return `<tr class="${filled?'filled':''}">
+<td style="width:28px">${filled?`<button class="tbl-del-btn" data-aid="${aid}" data-tab="assembleias" data-idx="${i}" title="Excluir">✕</button>`:''}</td>
+<td>${r.data||'—'}</td>
+<td style="white-space:normal">${r.pauta||'—'}</td>
+<td style="white-space:normal">${r.deliberacao||'—'}</td>
+<td>${histBtn}${histExp}</td>
+</tr>`;}).join('')}
+</tbody></table></div>
+<button class="btn-add" data-aid="${aid}" data-tab="assembleias" title="Adicionar assembleia">+</button>
+</div>`;}
+function tblC(rows,aid){
+const hasData=rows&&rows.length>0;
+const d=hasData?rows:Array(2).fill({data:'',operacao:'',investidor:'',nomeContato:'',assunto:'',obs:''});
+return `<div class="tbl-section"><div class="tbl-wrap"><table class="dtbl">
+<thead><tr><th></th><th style="min-width:90px">Data</th><th style="min-width:100px">Operação</th><th style="min-width:120px">Investidor</th><th style="min-width:120px">Nome do contato</th><th style="min-width:160px">Assunto/Solicitação</th><th style="min-width:140px">Observação</th></tr></thead>
+<tbody>${d.map((r,i)=>{
+const filled=hasData&&r.data;
+return `<tr class="${filled?'filled':''}">
+<td style="width:28px">${filled?`<button class="tbl-del-btn" data-aid="${aid}" data-tab="contatos" data-idx="${i}" title="Excluir">✕</button>`:''}</td>
+<td>${r.data||'—'}</td><td>${r.operacao||'—'}</td><td>${r.investidor||'—'}</td>
+<td>${r.nomeContato||'—'}</td><td style="white-space:normal">${r.assunto||'—'}</td>
+<td style="white-space:normal">${r.obs||'—'}</td>
+</tr>`;}).join('')}
+</tbody></table></div>
+<button class="btn-add" data-aid="${aid}" data-tab="contatos" title="Adicionar contato">+</button>
+</div>`;}
+function tblT(rows,aid){
+const hasData=rows&&rows.length>0;
+const d=hasData?rows:Array(2).fill({investidor:'',veiculo:'',cnpj:'',classe:'',qtdCotas:'',pct:''});
+return `<div class="tbl-section"><div class="tbl-wrap"><table class="dtbl">
+<thead><tr><th></th><th style="min-width:130px">Investidor</th><th style="min-width:130px">Veículo do investimento</th><th style="min-width:110px">CNPJ</th><th style="min-width:70px">Classe</th><th style="min-width:90px;text-align:right">Qtd. de cotas</th><th style="min-width:80px;text-align:right">% do fundo</th></tr></thead>
+<tbody>${d.map((r,i)=>{
+const filled=hasData&&r.investidor;
+return `<tr class="${filled?'filled':''}">
+<td style="width:28px">${filled?`<button class="tbl-del-btn" data-aid="${aid}" data-tab="titulares" data-idx="${i}" title="Excluir">✕</button>`:''}</td>
+<td>${r.investidor||'—'}</td><td>${r.veiculo||'—'}</td><td>${r.cnpj||'—'}</td>
+<td>${r.classe||'—'}</td><td style="text-align:right">${r.qtdCotas||'—'}</td>
+<td style="text-align:right">${r.pct||'—'}</td>
+</tr>`;}).join('')}
+</tbody></table></div>
+<button class="btn-add" data-aid="${aid}" data-tab="titulares" title="Adicionar titular">+</button>
+</div>`;}
+function tc(a,tid){
+if(tid==='info'){
+const isEnc=isEncerrado(a.status);
+const tBtn=isEnc
+?`<div style="margin-top:12px;padding-top:10px;border-top:1px solid #eef2f5"><button class="btn-status-toggle btn-reativar" data-aid="${a.id}" title="Reativar">↺ Reativar CRA</button></div>`
+:`<div style="margin-top:12px;padding-top:10px;border-top:1px solid #eef2f5"><button class="btn-status-toggle btn-encerrar" data-aid="${a.id}" title="Encerrar">✓ Encerrar CRA</button></div>`;
+return fields(a.info)+tBtn;}
+if(tid==='prest') return a.prest?fields(a.prest):'<span style="color:var(--text3);font-style:italic;font-size:12px">Sem dados.</span>';
+if(tid==='lim') return a.lim?fields(a.lim):'<span style="color:var(--text3);font-style:italic;font-size:12px">Sem dados.</span>';
+if(tid==='cov'){
+if(!a.cov||!a.cov.length) return '<div style="font-size:12px;color:var(--text3);font-style:italic;padding:8px 0">Nenhum covenant registrado.</div>';
+return a.cov.map(c=>`<div class="frow"><span class="flabel">${c.nome}</span>${fv(c.limite)}</div><div class="frow"><span class="flabel">Periodicidade</span>${fv(c.periodicidade)}</div>`).join('');}
+if(tid==='perfil') return a.perfil?fields(a.perfil):'<span style="color:var(--text3);font-style:italic;font-size:12px">Sem dados.</span>';
+if(tid==='assembleias') return tblA(a.assembleias,a.id);
+if(tid==='contatos') return tblC(a.contatos,a.id);
+if(tid==='titulares') return tblT(a.titulares,a.id);
+return '';}
+function renderCard(a){
+const nav=TABS.map((t,i)=>`<div class="tabitem${i===0?' on':''}" data-cid="${a.id}" data-tab="${t.id}">${t.label}</div>`).join('');
+const panels=TABS.map((t,i)=>`<div class="tabpanel${i===0?' on':''}" id="tp-${a.id}-${t.id}">${tc(a,t.id)}</div>`).join('');
+const nota=a.nota||'';
+const notaPreview=nota?nota.substring(0,60)+(nota.length>60?'…':''):'Adicionar nota rápida...';
+const isEnc=isEncerrado(a.status);
+const toggleBtn=isEnc
+?`<button class="btn-status-toggle btn-reativar" data-aid="${a.id}" title="Reativar CRA">↺ Reativar</button>`
+:`<button class="btn-status-toggle btn-encerrar" data-aid="${a.id}" title="Encerrar CRA">✓ Encerrar</button>`;
+return `<div class="acard" data-id="${a.id}" data-status="${a.status}" data-devedor="${a.devedor}">
+<div class="cheader">
+<div class="cheader-top">
+<span class="ctype">CRA <span class="num-badge">${a.id}</span></span>
+<div style="display:flex;align-items:center;gap:6px;position:relative">
+<span class="sbadge ${sc(a.status)}"><span class="sdot"></span>${a.status}</span>
+<button class="nota-btn ${nota?'has-nota':''}" data-nota-toggle="${a.id}" title="${nota?'Ver nota':'Adicionar nota'}">📝</button>
+<div class="nota-popup" id="nota-panel-${a.id}">
+<textarea id="nota-text-${a.id}" placeholder="Anotação rápida...">${nota}</textarea>
+<div class="nota-popup-footer">
+<button class="nota-popup-cancel" data-nota-cancel="${a.id}">Cancelar</button>
+<button class="nota-popup-save" data-nota-save="${a.id}">Salvar</button>
+</div>
+</div>
+</div>
+</div>
+<div class="cname">${a.nome}</div>
+<div class="csub">${a.devedor}</div>
+<div class="tabnav">${nav}</div>
+</div>
+<div>${panels}</div>
+</div>`;}
+function upd(list){
+const n=list.length;
+const el=document.getElementById('lbl-total');
+if(el) el.textContent=n+' ativo'+(n!==1?'s':'')+' exibido'+(n!==1?'s':'');
+updateChipCounts();}
+function renderAll(){
+const t=currentFilter;
+const dv=document.getElementById('sfil').value;
+const q=document.getElementById('srch').value.toLowerCase();
+const f=DATA.filter(a=>{
+if(t==='Vigente'&&a.status!=='Vigente') return false;
+if(t==='Encerrada'&&!isEncerrado(a.status)) return false;
+if(t==='Inadimplente'&&a.status!=='Inadimplente') return false;
+if(dv&&a.devedor!==dv) return false;
+if(q){const s=(a.nome+a.devedor+JSON.stringify(a.info)).toLowerCase();if(!s.includes(q))return false;}
+return true;});
+upd(f);
+const g=document.getElementById('cgrid');
+if(!f.length){g.innerHTML='<div class="no-res"><svg width="32" height="32" fill="none" stroke="#9ab0bc" stroke-width="1.5" viewBox="0 0 24 24" style="display:block;margin:0 auto 10px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Nenhum ativo encontrado.</div>';return;}
+g.innerHTML=f.map(renderCard).join('');}
+function goToTab(aid,tab){
+setTimeout(()=>{
+const card=document.querySelector(`.acard[data-id="${aid}"]`);
+if(!card)return;
+card.querySelectorAll('.tabitem').forEach(x=>x.classList.remove('on'));
+card.querySelectorAll('.tabpanel').forEach(x=>x.classList.remove('on'));
+const ti=card.querySelector(`.tabitem[data-tab="${tab}"]`);
+const tp=document.getElementById(`tp-${aid}-${tab}`);
+if(ti)ti.classList.add('on');if(tp)tp.classList.add('on');},0);}
+let mc={id:null,tab:null};
+function gf(tab){if(tab==='assembleias')return FA;if(tab==='contatos')return FC;return FT;}
+function gt(tab){if(tab==='assembleias')return'Adicionar assembleia';if(tab==='contatos')return'Adicionar contato com investidor';return'Adicionar titular';}
+function openM(aid,tab){
+mc={id:aid,tab};
+document.getElementById('modal-title').textContent=gt(tab);
+const ff=gf(tab);
+document.getElementById('modal-fields').innerHTML=ff.map(f=>`<div class="modal-field"><label>${f.label}</label>${f.type==='textarea'?`<textarea id="mf-${f.key}" placeholder="${f.label}"></textarea>`:`<input type="text" id="mf-${f.key}" placeholder="${f.label}">`}</div>`).join('');
+document.getElementById('modal-overlay').classList.add('open');}
+function closeM(){document.getElementById('modal-overlay').classList.remove('open');mc={id:null,tab:null};}
+function saveM(){
+const a=DATA.find(x=>x.id===mc.id)||DATA_FUNDOS.find(x=>x.id===mc.id);if(!a)return;
+const ff=gf(mc.tab);const row={};
+ff.forEach(f=>{const el=document.getElementById('mf-'+f.key);row[f.key]=el?el.value.trim():'';});
+if(mc.tab==='assembleias'){row.hist='';a.assembleias.push(row);}
+else if(mc.tab==='contatos') a.contatos.push(row);
+else a.titulares.push(row);
+const savedTab=mc.tab;const savedAid=mc.id;
+closeM();
+if(DATA_FUNDOS.find(x=>x.id===savedAid)) renderFundos(); else renderAll();
+goToTab(savedAid,savedTab);}
+document.getElementById('modal-cancel').addEventListener('click',closeM);
+document.getElementById('modal-save').addEventListener('click',saveM);
+document.getElementById('modal-overlay')?.addEventListener('click',function(e){if(e.target===this)closeM();});
+let hmc={aid:null,idx:null};
+function openHist(aid,idx){
+const a=DATA.find(x=>x.id===aid);if(!a)return;
+const r=a.assembleias[idx];if(!r)return;
+hmc={aid,idx};
+document.getElementById('hm-title').textContent='Histórico — '+r.data;
+document.getElementById('hm-sub').textContent=r.pauta||'';
+document.getElementById('hm-text').value=r.hist||'';
+document.getElementById('hist-modal-overlay').classList.add('open');}
+function closeHist(){document.getElementById('hist-modal-overlay').classList.remove('open');hmc={aid:null,idx:null};}
+function saveHist(){
+const a=DATA.find(x=>x.id===hmc.aid)||DATA_FUNDOS.find(x=>x.id===hmc.aid);if(!a)return;
+a.assembleias[hmc.idx].hist=document.getElementById('hm-text').value.trim();
+const savedAid=hmc.aid;
+closeHist();
+if(DATA_FUNDOS.find(x=>x.id===savedAid)) renderFundos(); else renderAll();
+goToTab(savedAid,'assembleias');}
+document.getElementById('hm-cancel').addEventListener('click',closeHist);
+document.getElementById('hm-save').addEventListener('click',saveHist);
+document.getElementById('hist-modal-overlay')?.addEventListener('click',function(e){if(e.target===this)closeHist();});
+document.addEventListener('click',function(e){
+const ab=e.target.closest('.btn-add');
+if(ab){openM(parseInt(ab.dataset.aid),ab.dataset.tab);return;}
+const ti=e.target.closest('.tabitem');
+if(ti&&!e.target.closest('.btn-add')){
+const cid=ti.dataset.cid,tab=ti.dataset.tab;
+const card=document.querySelector(`.acard[data-id="${cid}"]`);
+if(card){
+card.querySelectorAll('.tabitem').forEach(x=>x.classList.remove('on'));
+card.querySelectorAll('.tabpanel').forEach(x=>x.classList.remove('on'));
+ti.classList.add('on');
+const p=document.getElementById('tp-'+cid+'-'+tab);
+if(p)p.classList.add('on');}
+return;}
+const nt=e.target.closest('[data-nota-toggle]');
+if(nt){
+e.stopPropagation();
+const aid=nt.dataset.notaToggle;
+document.querySelectorAll('.nota-popup.open').forEach(p=>{if(p.id!=='nota-panel-'+aid)p.classList.remove('open');});
+const panel=document.getElementById('nota-panel-'+aid);
+if(panel){
+panel.classList.toggle('open');
+if(panel.classList.contains('open')){
+const ta=document.getElementById('nota-text-'+aid);
+if(ta)setTimeout(()=>ta.focus(),50);}
+}
+return;}
+const nc=e.target.closest('[data-nota-cancel]');
+if(nc){
+const aid=nc.dataset.notaCancel;
+const a=DATA.find(x=>x.id==aid)||DATA_FUNDOS.find(x=>x.id==aid);
+const panel=document.getElementById('nota-panel-'+aid);
+if(a){const ta=document.getElementById('nota-text-'+aid);if(ta)ta.value=a.nota||'';}
+if(panel)panel.classList.remove('open');
+return;}
+const ns=e.target.closest('[data-nota-save]');
+if(ns){
+const aid=parseInt(ns.dataset.notaSave);
+const a=DATA.find(x=>x.id===aid)||DATA_FUNDOS.find(x=>x.id===aid);
+const ta=document.getElementById('nota-text-'+aid);
+if(a&&ta){
+a.nota=ta.value.trim();
+const prev=document.getElementById('nota-preview-'+aid);
+if(prev){
+const t=a.nota;
+prev.textContent=t?(t.substring(0,60)+(t.length>60?'…':'')):'Adicionar nota rápida...';
+prev.classList.toggle('empty',!t);}
+const panel=document.getElementById('nota-panel-'+aid);
+if(panel)panel.classList.remove('open');}
+return;}
+const stBtn=e.target.closest('.btn-status-toggle');
+if(stBtn){
+if(stBtn.dataset.faid){
+const faid=parseInt(stBtn.dataset.faid);
+const fa=DATA_FUNDOS.find(x=>x.id===faid);
+if(fa){fa.status=isEncerrado(fa.status)?'Vigente':'Encerrada';renderFundos();}
+} else {
+const aid=parseInt(stBtn.dataset.aid);
+const a=DATA.find(x=>x.id===aid);
+if(a){a.status=isEncerrado(a.status)?'Vigente':'Encerrada';renderAll();}
+}
+return;}
+const delBtn=e.target.closest('.tbl-del-btn');
+if(delBtn){
+if(!confirm('Excluir este registro?')) return;
+const aid=parseInt(delBtn.dataset.aid);
+const tab=delBtn.dataset.tab;
+const idx=parseInt(delBtn.dataset.idx);
+const a=DATA.find(x=>x.id===aid)||DATA_FUNDOS.find(x=>x.id===aid);
+if(a){
+if(tab==='assembleias') a.assembleias.splice(idx,1);
+else if(tab==='contatos') a.contatos.splice(idx,1);
+else if(tab==='titulares') a.titulares.splice(idx,1);
+if(DATA_FUNDOS.find(x=>x.id===aid)) renderFundos(); else renderAll();
+goToTab(aid,tab);}
+return;}
+const hb=e.target.closest('.hist-btn');
+if(hb){
+openHist(parseInt(hb.dataset.aid),parseInt(hb.dataset.idx));
+return;}
+});
+let currentFilter='Vigente';
+function buildAlertChips(){
+const inad=DATA.filter(a=>a.status==='Inadimplente').length;
+const recovery=DATA.filter(a=>a.cov&&a.cov.some(c=>c.limite&&(c.limite.toLowerCase().includes('recovery')||c.limite.toLowerCase().includes('em andamento')))).length;
+const notas=DATA.filter(a=>a.nota&&a.nota.trim()).length;
+let html='';
+if(inad>0) html+=`<span class="alert-chip red">🔴 ${inad} Inadimplente${inad>1?'s':''}</span>`;
+if(recovery>0) html+=`<span class="alert-chip red">⚠️ ${recovery} em Recovery</span>`;
+if(notas>0) html+=`<span class="alert-chip blue">📝 ${notas} com nota</span>`;
+document.getElementById('alert-chips').innerHTML=html;}
+function updateChipCounts(){
+document.getElementById('chip-vig').textContent=DATA.filter(a=>a.status==='Vigente').length;
+document.getElementById('chip-inad').textContent=DATA.filter(a=>a.status==='Inadimplente').length;
+document.getElementById('chip-enc').textContent=DATA.filter(a=>isEncerrado(a.status)).length;
+document.getElementById('chip-all').textContent=DATA.length;
+buildAlertChips();}
+document.querySelectorAll('.chip').forEach(c=>{
+c.addEventListener('click',()=>{
+document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+c.classList.add('on');
+currentFilter=c.dataset.t;
+renderAll();});});
+document.getElementById('sfil')?.addEventListener('change',renderAll);
+document.getElementById('srch')?.addEventListener('input',renderAll);
+const INVDATA=[
+{
+id:201, nome:'Az Quest', cnpj:'—', tipo:'Gestora', email:'laurence.mello@azquest.com.br; gabriel.perez@azquest.com.br; maria.vendramini@azquest.com.br', telefone:'(11) 97682-9641 (Gabriel) / (11) 95619-1677 (Maria Tereza) / (21) 98752-9880 (Guilherme Costa)',
+contatoPrincipal:'Laurence Melo (CIO), Gabriel Perez (Crédito), Maria Tereza Vendraminni (Originação)', endereco:'', obs:'Gestora com múltiplos veículos de investimento — FIAGRO e FIDC. Contatos adicionais: Mateus Bantel (matheus.bantel@azquest.com.br), Daniel Borini (daniel.borini@azquest.com.br), Guilherme Costa (guilherme.costa@azquest.com.br).',
+status:'Ativo',
+suitPerfil:'', suitProduto:'', suitCapacidade:'', suitExperiencia:'',
+suitHorizonte:'', suitRisco:'', suitData:'', suitObs:'',
+posicoesCRA:[
+{cra:'CRA Alvoar — 11ª Emissão', serie:'1ª Série', codigoIF:'CRA02200E76', veiculo:'AZ QUEST SOLE FUNDO DE INVESTIMENTO NAS CADEIAS PRODUTIVAS DO AGRONEGOCIO - FIAGRO', cnpjVeiculo:'44.625.826/0001-11', qtdCotas:'8.942', valorInvestido:'', pct:''},
+{cra:'CRA Alvoar — 11ª Emissão', serie:'1ª Série', codigoIF:'CRA02200E76', veiculo:'AZ QUEST LUNA FUNDO DE INVESTIMENTO NAS CADEIAS PRODUTIVAS DO AGRONEGOCIO - FIAGRO', cnpjVeiculo:'49.863.204/0001-45', qtdCotas:'13.808', valorInvestido:'', pct:''},
+{cra:'CRA Eloagrícola — 25ª Emissão', serie:'1ª Série', codigoIF:'CRA02300O8D', veiculo:'AZ QUEST LUNA FUNDO DE INVESTIMENTO NAS CADEIAS PRODUTIVAS DO AGRONEGOCIO - FIAGRO', cnpjVeiculo:'49.863.204/0001-45', qtdCotas:'16.810', valorInvestido:'', pct:''},
+{cra:'CRA Eloagrícola — 25ª Emissão', serie:'1ª Série', codigoIF:'CRA02300O8D', veiculo:'AZ QUEST SOLE FUNDO DE INVESTIMENTO NAS CADEIAS PRODUTIVAS DO AGRONEGOCIO - FIAGRO', cnpjVeiculo:'44.625.826/0001-11', qtdCotas:'7.190', valorInvestido:'', pct:''},
+{cra:'CRA Ura Agro XVII — 36ª Emissão', serie:'2ª Série', codigoIF:'CRA02400336', veiculo:'AZ QUEST SOLE FUNDO DE INVESTIMENTO NAS CADEIAS PRODUTIVAS DO AGRONEGOCIO - FIAGRO', cnpjVeiculo:'44.625.826/0001-11', qtdCotas:'3.668', valorInvestido:'', pct:''},
+{cra:'CRA Ura Agro XVII — 36ª Emissão', serie:'2ª Série', codigoIF:'CRA02400336', veiculo:'AZ QUEST LUNA FUNDO DE INVESTIMENTO NAS CADEIAS PRODUTIVAS DO AGRONEGOCIO - FIAGRO', cnpjVeiculo:'49.863.204/0001-45', qtdCotas:'9.624', valorInvestido:'', pct:''},
+{cra:'CRA Elo Agronegócios — 40ª Emissão', serie:'1ª Série', codigoIF:'CRA02400B43', veiculo:'AZ QUEST LUNA FUNDO DE INVESTIMENTO NAS CADEIAS PRODUTIVAS DO AGRONEGOCIO - FIAGRO', cnpjVeiculo:'49.863.204/0001-45', qtdCotas:'10.669', valorInvestido:'', pct:''},
+{cra:'CRA Elo Agronegócios — 40ª Emissão', serie:'1ª Série', codigoIF:'CRA02400B43', veiculo:'AZ QUEST SUPRA MASTER FUNDO DE INVESTIMENTO FINANCEIRO MULTIMERCADO', cnpjVeiculo:'36.352.509/0001-40', qtdCotas:'3.090', valorInvestido:'', pct:''},
+{cra:'CRA Elo Agronegócios — 40ª Emissão', serie:'1ª Série', codigoIF:'CRA02400B43', veiculo:'FUNDO DE INVESTIMENTO EM DIREITOS CREDITORIOS AZQ ALL CREDIT HY', cnpjVeiculo:'33.475.421/0001-28', qtdCotas:'1.800', valorInvestido:'', pct:''},
+{cra:'CRA Elo Agronegócios — 40ª Emissão', serie:'1ª Série', codigoIF:'CRA02400B43', veiculo:'AZ QUEST SOLE FUNDO DE INVESTIMENTO NAS CADEIAS PRODUTIVAS DO AGRONEGOCIO - FIAGRO', cnpjVeiculo:'44.625.826/0001-11', qtdCotas:'4.147', valorInvestido:'', pct:''}
+],
+posicoesFundo:[
+{fundo:'BAVIERA PURA ORIGEM FIAGRO', cnpjFundo:'51.707.901/0001-59', serie:'Mezanino 1', veiculo:'AZ QUEST LUNA FI NAS CADEIAS PROD. DO AGRONEG.', cnpjVeiculo:'49.863.204/0001-45', qtdCotas:'11.647,43', valorInvestido:'', pct:''},
+{fundo:'BAVIERA PURA ORIGEM FIAGRO', cnpjFundo:'51.707.901/0001-59', serie:'Mezanino 1', veiculo:'AZ QUEST SOLE FI NAS CADEIAS PROD. DO AGRONEG.', cnpjVeiculo:'44.625.826/0001-11', qtdCotas:'1.585,58', valorInvestido:'', pct:''},
+{fundo:'BAVIERA PURA ORIGEM FIAGRO', cnpjFundo:'51.707.901/0001-59', serie:'Sênior 1', veiculo:'AZ QUEST LUNA FI NAS CADEIAS PROD. DO AGRONEG.', cnpjVeiculo:'49.863.204/0001-45', qtdCotas:'18.398,74', valorInvestido:'', pct:''},
+{fundo:'BAVIERA PURA ORIGEM FIAGRO', cnpjFundo:'51.707.901/0001-59', serie:'Sênior 1', veiculo:'AZ QUEST SOLE FI NAS CADEIAS PROD. DO AGRONEG.', cnpjVeiculo:'44.625.826/0001-11', qtdCotas:'2.335,98', valorInvestido:'', pct:''},
+{fundo:'MTRIOS FIDC', cnpjFundo:'64.041.032/0001-18', serie:'Única', veiculo:'RIO CEDRO COMERCIO E REPRESENTACOES LTDA', cnpjVeiculo:'22.303.472/0001-56', qtdCotas:'4.981,07', valorInvestido:'', pct:''}
+],
+contatos:[]
+},
+{
+id:202, nome:'BTG Asset', cnpj:'—', tipo:'Gestora', email:'Fabio.Vasconcellos@btgpactual.com; luis.bolfoni@btgpactual.com; bruna.bernardes@btgpactual.com; henrique.mariani@btgpactual.com', telefone:'',
+contatoPrincipal:'Fabio Vasconcellos (Agro), Luis Bolfoni (Gestor Crédito)', endereco:'', obs:'Contatos adicionais: Bruna Bernardes (bruna.bernardes@btgpactual.com), Henrique Mariani (henrique.mariani@btgpactual.com).',
+status:'Ativo',
+suitPerfil:'', suitProduto:'', suitCapacidade:'', suitExperiencia:'',
+suitHorizonte:'', suitRisco:'', suitData:'', suitObs:'',
+posicoesCRA:[
+{cra:'CRA Jatobá — 20ª Emissão', serie:'1ª Série', codigoIF:'CRA02300ENT', veiculo:'CERES BTG URA AGRO 2 FUNDO DE INVESTIMENTO NAS CADEIAS PRODUTIVAS DO AGRONEGOCIO RESP LIMITADA', cnpjVeiculo:'63.326.551/0001-60', qtdCotas:'12.000', valorInvestido:'', pct:''},
+{cra:'CRA Ruiz — 37ª Emissão', serie:'1ª Série', codigoIF:'CRA0240093U', veiculo:'BTG PACTUAL CREDITO AGRICOLA BTAG II CDI FIAGRO', cnpjVeiculo:'58.600.779/0001-66', qtdCotas:'12.351', valorInvestido:'', pct:''},
+{cra:'CRA Ruiz — 37ª Emissão', serie:'1ª Série', codigoIF:'CRA0240093U', veiculo:'BTG PACTUAL CREDITO AGRICOLA BTAG II PRE FIAGRO', cnpjVeiculo:'58.595.391/0001-14', qtdCotas:'8.550', valorInvestido:'', pct:''},
+{cra:'CRA Gurupi — 42ª Emissão', serie:'1ª Série', codigoIF:'CRA0250040H', veiculo:'BTG PACTUAL CREDITO AGRICOLA BTAG II CDI FIAGRO', cnpjVeiculo:'58.600.779/0001-66', qtdCotas:'25.000', valorInvestido:'', pct:''},
+{cra:'CRA Gurupi — 42ª Emissão', serie:'1ª Série', codigoIF:'CRA0250040H', veiculo:'BTG PACTUAL CREDITO AGRICOLA BTAG II PRE FIAGRO', cnpjVeiculo:'58.595.391/0001-14', qtdCotas:'25.000', valorInvestido:'', pct:''}
+],
+posicoesFundo:[
+{fundo:'POLLI FIAGRO', cnpjFundo:'57.305.969/0001-98', serie:'Sênior', veiculo:'CERES BTG URA AGRO 2 FUNDO DE INVESTIMENTO NAS CADEIAS PRODUTIVAS DO AGRONEGOCIO RESP LIMITADA', cnpjVeiculo:'63.326.551/0001-60', qtdCotas:'10.000', valorInvestido:'', pct:''},
+{fundo:'GRUPO AGRO FIAGRO', cnpjFundo:'63.866.936/0001-10', serie:'Sênior', veiculo:'CERES BTG URA AGRO 2 FUNDO DE INVESTIMENTO NAS CADEIAS PRODUTIVAS DO AGRONEGOCIO RESP LIMITADA', cnpjVeiculo:'63.326.551/0001-60', qtdCotas:'23.420,68', valorInvestido:'', pct:''},
+{fundo:'UP NORTH FIAGRO', cnpjFundo:'64.008.175/0001-28', serie:'Sênior', veiculo:'CERES BTG URA AGRO 2 FUNDO DE INVESTIMENTO NAS CADEIAS PRODUTIVAS DO AGRONEGOCIO RESP LIMITADA', cnpjVeiculo:'63.326.551/0001-60', qtdCotas:'20.000', valorInvestido:'', pct:''}
+],
+contatos:[]
+},
+{
+id:203, nome:'Polígono', cnpj:'—', tipo:'Gestora', email:'rodrigo@poligono.com; rfonseca@poligono.com; bdumans@poligono.com; rprado@poligono.com', telefone:'',
+contatoPrincipal:'Rodrigo Kuchauskas (Co-Head Agro), Rafael Fonseca (RI)', endereco:'', obs:'Contatos adicionais: Bernardo Dumans — Credit Research (bdumans@poligono.com), Ricardo Prado — Co-Head Agro (rprado@poligono.com), Pedro Faber (pfaber@poligono.com), Fabrizzio Sanchez (fsanchez@poligono.com), Edgard Erasmi — CEO (eerasmi@poligono.com).',
+status:'Ativo',
+suitPerfil:'', suitProduto:'', suitCapacidade:'', suitExperiencia:'',
+suitHorizonte:'', suitRisco:'', suitData:'', suitObs:'',
+posicoesCRA:[
+{cra:'CRA Ruiz — 37ª Emissão', serie:'1ª Série', codigoIF:'CRA0240093U', veiculo:'PLGN K FUNDO DE INVESTIMENTO EM DIREITOS CREDITORIOS', cnpjVeiculo:'60.373.177/0001-65', qtdCotas:'610', valorInvestido:'', pct:''},
+{cra:'CRA Ruiz — 37ª Emissão', serie:'1ª Série', codigoIF:'CRA0240093U', veiculo:'POLIGONO CHARLIE PREVIDENCIA FUNDO DE INVESTIMENTO FINANCEIRO', cnpjVeiculo:'55.689.417/0001-03', qtdCotas:'250', valorInvestido:'', pct:''},
+{cra:'CRA Ruiz — 37ª Emissão', serie:'1ª Série', codigoIF:'CRA0240093U', veiculo:'PLGN LGCY FUNDO DE INVESTIMENTO EM DIREITOS CREDITORIOS', cnpjVeiculo:'57.185.833/0001-91', qtdCotas:'2.194', valorInvestido:'', pct:''},
+{cra:'CRA Ruiz — 37ª Emissão', serie:'1ª Série', codigoIF:'CRA0240093U', veiculo:'SPECIALE PLGN FUNDO DE INVESTIMENTO EM DIREITOS CREDITORIOS', cnpjVeiculo:'57.183.411/0001-87', qtdCotas:'2.298', valorInvestido:'', pct:''},
+{cra:'CRA Ruiz — 37ª Emissão', serie:'1ª Série', codigoIF:'CRA0240093U', veiculo:'POLIGONO MASTER PRO FUNDO DE INVESTIMENTO EM DIREITOS CREDITORIOS', cnpjVeiculo:'55.325.522/0001-55', qtdCotas:'23.349', valorInvestido:'', pct:''},
+{cra:'CRA Ruiz — 37ª Emissão', serie:'1ª Série', codigoIF:'CRA0240093U', veiculo:'POLIGONO DELTA FUNDO DE INVESTIMENTO EM DIREITOS CREDITORIOS', cnpjVeiculo:'61.536.498/0001-04', qtdCotas:'15.500', valorInvestido:'', pct:''},
+{cra:'CRA Ruiz — 37ª Emissão', serie:'1ª Série', codigoIF:'CRA0240093U', veiculo:'PLGN VIC FUNDO DE INVESTIMENTO EM DIREITOS CREDITORIOS', cnpjVeiculo:'57.619.773/0001-78', qtdCotas:'3.938', valorInvestido:'', pct:''},
+{cra:'CRA Ruiz — 37ª Emissão', serie:'1ª Série', codigoIF:'CRA0240093U', veiculo:'PLGN ARTON FUNDO DE INVESTIMENTO EM DIREITOS CREDITORIOS', cnpjVeiculo:'58.236.968/0001-00', qtdCotas:'960', valorInvestido:'', pct:''},
+{cra:'CRA Valoriza — 39ª Emissão', serie:'1ª Série', codigoIF:'CRA024007VH', veiculo:'POLIGONO DELTA FUNDO DE INVESTIMENTO EM DIREITOS CREDITORIOS', cnpjVeiculo:'61.536.498/0001-04', qtdCotas:'15.000', valorInvestido:'', pct:''},
+{cra:'CRA Valoriza — 39ª Emissão', serie:'1ª Série', codigoIF:'CRA024007VH', veiculo:'POLIGONO CHARLIE PREVIDENCIA FUNDO DE INVESTIMENTO FINANCEIRO', cnpjVeiculo:'55.689.417/0001-03', qtdCotas:'800', valorInvestido:'', pct:''},
+{cra:'CRA Valoriza — 39ª Emissão', serie:'1ª Série', codigoIF:'CRA024007VH', veiculo:'POLIGONO MASTER PRO FUNDO DE INVESTIMENTO EM DIREITOS CREDITORIOS', cnpjVeiculo:'55.325.522/0001-55', qtdCotas:'32.200', valorInvestido:'', pct:''}
+],
+posicoesFundo:[],
+contatos:[]
+},
+{
+id:204, nome:'Riza Asset', cnpj:'—', tipo:'Gestora', email:'gabriel.machado@rizaasset.com; pedro.cavelagna@rizaasset.com', telefone:'11 93431-1775 (Laura Gragnano RI) / 19 98191-5554 (Pedro Cavelagna)',
+contatoPrincipal:'Gabriel Machado, Laura Gragnano (RI), Pedro Cavelagna', endereco:'', obs:'',
+status:'Ativo',
+suitPerfil:'', suitProduto:'', suitCapacidade:'', suitExperiencia:'',
+suitHorizonte:'', suitRisco:'', suitData:'', suitObs:'',
+posicoesCRA:[
+{cra:'CRA Semeagro — 4ª Emissão', serie:'1ª Série', codigoIF:'CRA022007VN', veiculo:'RIZA AGRO II FI NAS CADEIAS PRODUTIVAS AGROINDUSTRIAIS - FIAGRO - IMOBILIARIO - RESP LIMITADA', cnpjVeiculo:'42.592.476/0001-09', qtdCotas:'8.625', valorInvestido:'', pct:''},
+{cra:'CRA Ura Agro XIII — 28ª Emissão', serie:'1ª Série', codigoIF:'CRA02300SV5', veiculo:'RIZA AGRO II FI NAS CADEIAS PRODUTIVAS AGROINDUSTRIAIS - FIAGRO - IMOBILIARIO - RESP LIMITADA', cnpjVeiculo:'42.592.476/0001-09', qtdCotas:'9.938', valorInvestido:'', pct:''}
+],
+posicoesFundo:[],
+contatos:[]
+},
+{
+id:205, nome:'Itaú BBA / Itaú Asset', cnpj:'—', tipo:'Banco / Gestora', email:'felipe.bilia@itau-unibanco.com.br; tadeu.barreto@itau-unibanco.com.br; gabriel.pegorer@itau-unibanco.com.br', telefone:'(11) 95853-4543 (Tadeu Barreto) / (11) 98993-2507 (Gabriel Pegorer)',
+contatoPrincipal:'Felipe Bilia (Crédito), Tadeu Barreto, Gabriel Pegorer', endereco:'', obs:'Contatos Tesouraria: Vinicius Okano (vinicius.okano@itaubba.com), Marcos Andia (marcos.andia@itaubba.com).',
+status:'Ativo',
+suitPerfil:'', suitProduto:'', suitCapacidade:'', suitExperiencia:'',
+suitHorizonte:'', suitRisco:'', suitData:'', suitObs:'',
+posicoesCRA:[
+{cra:'CRA NOOA — 23ª Emissão', serie:'1ª Série', codigoIF:'CRA02300GIH', veiculo:'ITAU UNIBANCO S.A.', cnpjVeiculo:'60.701.190/0001-04', qtdCotas:'70.000', valorInvestido:'', pct:'100%'}
+],
+posicoesFundo:[
+{fundo:'BAVIERA PURA ORIGEM FIAGRO (representado por Itaú Asset)', cnpjFundo:'51.707.901/0001-59', serie:'Sênior 1', veiculo:'ITAU ASSET RURAL FIAGRO RESPONSABILIDADE LIMITADA', cnpjVeiculo:'42.479.593/0001-60', qtdCotas:'16.800', valorInvestido:'', pct:''}
+],
+contatos:[]
+},
+{
+id:206, nome:'Jatobá FIAGRO', cnpj:'63.884.798/0001-00', tipo:'FIAGRO', email:'', telefone:'',
+contatoPrincipal:'', endereco:'', obs:'FIAGRO que investe na 22ª emissão (Portal Agro) — operação em inadimplência. Não localizado na planilha de contatos.',
+status:'Ativo',
+suitPerfil:'', suitProduto:'', suitCapacidade:'', suitExperiencia:'',
+suitHorizonte:'', suitRisco:'', suitData:'', suitObs:'',
+posicoesCRA:[
+{cra:'CRA Portal Agro — 22ª Emissão', serie:'1ª Série', codigoIF:'CRA02300GTL', veiculo:'JATOBA FIAGRO DIREITOS CREDITORIOS NAO PADRONIZADO', cnpjVeiculo:'63.884.798/0001-00', qtdCotas:'53.648', valorInvestido:'', pct:''},
+{cra:'CRA Portal Agro — 22ª Emissão', serie:'2ª Série', codigoIF:'CRA02300GTM', veiculo:'JATOBA FIAGRO DIREITOS CREDITORIOS NAO PADRONIZADO', cnpjVeiculo:'63.884.798/0001-00', qtdCotas:'38.500', valorInvestido:'', pct:''}
+],
+posicoesFundo:[],
+contatos:[]
+},
+{
+id:207, nome:'Brave Asset', cnpj:'—', tipo:'Gestora', email:'zampar@braveasset.com.br; diego@braveasset.com.br; benjamin@braveasset.com.br', telefone:'(11) 99128-7414 (Alexandre Zampar) / (11) 99979-7299 (Diego Coelho) / (17) 99773-0003 (Benjamin Jacinto)',
+contatoPrincipal:'Alexandre Zampar (Sócio), Diego Traesel Coelho (Sócio e Gestor)', endereco:'', obs:'Contato adicional: Benjamin Jacinto — Crédito Estruturado (benjamin@braveasset.com.br).',
+status:'Ativo',
+suitPerfil:'', suitProduto:'', suitCapacidade:'', suitExperiencia:'',
+suitHorizonte:'', suitRisco:'', suitData:'', suitObs:'',
+posicoesCRA:[],
+posicoesFundo:[
+{fundo:'VALORIZA FIDC', cnpjFundo:'52.093.999/0001-64', serie:'Sênior 1', veiculo:'BRAVE 90 FUNDO DE INVEST. EM COTAS', cnpjVeiculo:'35.726.300/0001-37', qtdCotas:'17.303,84', valorInvestido:'', pct:''},
+{fundo:'VALORIZA FIDC', cnpjFundo:'52.093.999/0001-64', serie:'Sênior 1', veiculo:'BRAVE BWM FIC DE FIDC', cnpjVeiculo:'49.089.398/0001-73', qtdCotas:'1.357', valorInvestido:'', pct:''},
+{fundo:'VALORIZA FIDC', cnpjFundo:'52.093.999/0001-64', serie:'Mezanino 1', veiculo:'BRAVE 180 INSTITUCIONAL FIC', cnpjVeiculo:'36.015.243/0001-40', qtdCotas:'1.535,90', valorInvestido:'', pct:''},
+{fundo:'VALORIZA FIDC', cnpjFundo:'52.093.999/0001-64', serie:'Mezanino 1', veiculo:'BRAVE 90 FUNDO DE INVEST. EM COTAS', cnpjVeiculo:'35.726.300/0001-37', qtdCotas:'5.293,67', valorInvestido:'', pct:''},
+{fundo:'VALORIZA FIDC', cnpjFundo:'52.093.999/0001-64', serie:'Mezanino 1', veiculo:'BRAVE BWM FIC DE FIDC', cnpjVeiculo:'49.089.398/0001-73', qtdCotas:'693', valorInvestido:'', pct:''}
+],
+contatos:[]
+},
+{
+id:208, nome:'Bradesco Asset', cnpj:'—', tipo:'Gestora', email:'eduardoj.telles@assetbradesco.com.br; bruno.ferreira@assetbradesco.com.br; rafael.gruner@assetbradesco.com.br', telefone:'',
+contatoPrincipal:'Eduardo Junqueira Telles, Bruno Ferreira, Rafael Gruner', endereco:'', obs:'',
+status:'Ativo',
+suitPerfil:'', suitProduto:'', suitCapacidade:'', suitExperiencia:'',
+suitHorizonte:'', suitRisco:'', suitData:'', suitObs:'',
+posicoesCRA:[],
+posicoesFundo:[
+{fundo:'BAVIERA PURA ORIGEM FIAGRO', cnpjFundo:'51.707.901/0001-59', serie:'Sênior 2', veiculo:'BRADESCO HIGH YIELD 3 FIC DE FI', cnpjVeiculo:'59.749.356/0001-75', qtdCotas:'1.500', valorInvestido:'', pct:''},
+{fundo:'BAVIERA PURA ORIGEM FIAGRO', cnpjFundo:'51.707.901/0001-59', serie:'Sênior 2', veiculo:'BRAM HIGH YIELD FIDC II RL', cnpjVeiculo:'44.230.592/0001-03', qtdCotas:'1.800', valorInvestido:'', pct:''},
+{fundo:'BAVIERA PURA ORIGEM FIAGRO', cnpjFundo:'51.707.901/0001-59', serie:'Sênior 2', veiculo:'BRAM HIGH YIELD FIDC III RL', cnpjVeiculo:'51.269.670/0001-49', qtdCotas:'3.000', valorInvestido:'', pct:''},
+{fundo:'BAVIERA PURA ORIGEM FIAGRO', cnpjFundo:'51.707.901/0001-59', serie:'Sênior 2', veiculo:'BRAM WAREHOUSE FIF - CLASSE RENDA', cnpjVeiculo:'62.209.138/0001-52', qtdCotas:'700', valorInvestido:'', pct:''}
+],
+contatos:[]
+},
+{
+id:209, nome:'JiveMaua', cnpj:'64.447.452/0001-07', tipo:'Gestora', email:'paulo.fleury@jivemaua.com.br', telefone:'(11) 9.9675-0515',
+contatoPrincipal:'Paulo Fleury Tarso', endereco:'', obs:'Contato adicional: Felipe Campos (felipe.campos@jiveinvestments.com).',
+status:'Ativo',
+suitPerfil:'', suitProduto:'', suitCapacidade:'', suitExperiencia:'',
+suitHorizonte:'', suitRisco:'', suitData:'', suitObs:'',
+posicoesCRA:[],
+posicoesFundo:[
+{fundo:'UP NORTH FIAGRO', cnpjFundo:'64.008.175/0001-28', serie:'Sênior', veiculo:'JIVEMAUA BOSSANOVA SECURITIZADO MASTER', cnpjVeiculo:'64.447.452/0001-07', qtdCotas:'28.614', valorInvestido:'', pct:''}
+],
+contatos:[]
+},
+{
+id:210, nome:'Banco Mercantil de Investimentos', cnpj:'34.169.557/0001-72', tipo:'Banco', email:'reinaldo.alves@mercantil.com.br', telefone:'',
+contatoPrincipal:'Reinaldo Alves', endereco:'', obs:'',
+status:'Ativo',
+suitPerfil:'', suitProduto:'', suitCapacidade:'', suitExperiencia:'',
+suitHorizonte:'', suitRisco:'', suitData:'', suitObs:'',
+posicoesCRA:[],
+posicoesFundo:[
+{fundo:'VALORIZA FIDC', cnpjFundo:'52.093.999/0001-64', serie:'Sênior 1', veiculo:'BANCO MERCANTIL DE INVESTIMENTOS S.A.', cnpjVeiculo:'34.169.557/0001-72', qtdCotas:'9.574,14', valorInvestido:'', pct:''}
+],
+contatos:[]
+},
+{
+id:211, nome:'Ubyfol / Uby Agroquímica', cnpj:'21.320.221/0001-17', tipo:'Empresa', email:'', telefone:'',
+contatoPrincipal:'', endereco:'', obs:'Empresa cedente/devedora. Não localizada na planilha de contatos de investidores.',
+status:'Ativo',
+suitPerfil:'', suitProduto:'', suitCapacidade:'', suitExperiencia:'',
+suitHorizonte:'', suitRisco:'', suitData:'', suitObs:'',
+posicoesCRA:[
+{cra:'CRA Jatobá — 20ª Emissão', serie:'2ª Série', codigoIF:'CRA02300ETD', veiculo:'UBY AGROQUIMICA SA', cnpjVeiculo:'21.320.221/0001-17', qtdCotas:'3.000', valorInvestido:'', pct:''}
+],
+posicoesFundo:[],
+contatos:[]
+}
+];
+let invDetailId=null;
+let invDetailTab='cadastro';
+function fmtBRL(n){if(!n||isNaN(n))return'R$ 0,00';return'R$ '+Number(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function calcInvTotal(inv){
+const cra=(inv.posicoesCRA||[]).reduce((s,p)=>s+(parseFloat((p.valorInvestido||'').replace(/[^0-9,]/g,'').replace(',','.'))||0),0);
+const fdo=(inv.posicoesFundo||[]).reduce((s,p)=>s+(parseFloat((p.valorInvestido||'').replace(/[^0-9,]/g,'').replace(',','.'))||0),0);
+return cra+fdo;}
+function renderInvList(){
+const q=(document.getElementById('srch-inv').value||'').toLowerCase();
+const filtered=INVDATA.filter(inv=>{
+if(!q)return true;
+return(inv.nome+inv.cnpj).toLowerCase().includes(q);});
+const el=document.getElementById('inv-list');
+if(!filtered.length){el.innerHTML='<div style="text-align:center;padding:3rem;color:#9ab0bc;font-size:14px">Nenhum investidor cadastrado.<br><br><button class="btn-add-inv" onclick="openInvModal()">+ Adicionar primeiro investidor</button></div>';return;}
+el.innerHTML='<div class="inv-list-wrap">'+filtered.map(inv=>{
+const total=calcInvTotal(inv);
+const nCras=(inv.posicoesCRA||[]).length;
+const nFundos=(inv.posicoesFundo||[]).length;
+return `<div class="inv-row" data-inv-id="${inv.id}">
+<div class="inv-row-left">
+<div class="inv-row-name">${inv.nome}<span class="inv-type-tag">${inv.tipo||'—'}</span></div>
+<div class="inv-row-sub">CNPJ: ${inv.cnpj||'—'} &nbsp;·&nbsp; ${nCras} CRA${nCras!==1?'s':''} &nbsp;·&nbsp; ${nFundos} Fundo${nFundos!==1?'s':''}</div>
+</div>
+<div class="inv-col">
+<div class="inv-col-label">Total investido</div>
+<div class="inv-col-val green">${fmtBRL(total)}</div>
+</div>
+<div class="inv-col">
+<div class="inv-col-label">Status</div>
+<span class="inv-status-badge ${inv.status==='Ativo'?'inv-status-ativo':'inv-status-inativo'}">${inv.status||'Ativo'}</span>
+</div>
+<div class="inv-arrow">›</div>
+</div>`;}).join('')+'</div>';}
+function renderInvDetail(id){
+const inv=INVDATA.find(x=>x.id===id);
+if(!inv)return;
+invDetailId=id;
+const total=calcInvTotal(inv);
+const tabs=['cadastro','posicoes','contatos','suitability'];
+const tabLabels={'cadastro':'Cadastro','posicoes':'Posições em CRAs','contatos':'Histórico de contatos','suitability':'Suitability'};
+const navHtml=tabs.map(t=>`<div class="inv-dtab${invDetailTab===t?' on':''}" data-dtab="${t}">${tabLabels[t]}</div>`).join('');
+let body='';
+if(invDetailTab==='cadastro'){
+const fields=[['Nome/Razão social',inv.nome],['CNPJ',inv.cnpj],['Tipo',inv.tipo],['E-mail',inv.email],['Telefone',inv.telefone],['Contato principal',inv.contatoPrincipal],['Endereço',inv.endereco],['Observações',inv.obs]];
+body=(function(){var rows=fields.map(function(p){return '<div class="frow" style="padding:7px 0"><span class="flabel">'+p[0]+'</span>'+fv(p[1])+'</div>';}).join('');return '<div>'+rows+'</div><div style="margin-top:12px;display:flex;gap:8px"><button class="inv-edit-btn" onclick="openInvModal('+id+')">✏️ Editar</button></div>';})();}
+else if(invDetailTab==='posicoes'){
+const posCRA=inv.posicoesCRA||[];
+const posFundo=inv.posicoesFundo||[];
+const rowsCRA=posCRA.length?posCRA.map((p,i)=>`<tr>
+<td><button class="tbl-del-btn" onclick="delPos(${id},'cra',${i})" title="Remover">✕</button></td>
+<td>${p.cra||'—'}</td><td>${p.serie||'—'}</td><td>${p.codigoIF||'—'}</td>
+<td style="white-space:normal;max-width:200px;font-size:11px">${p.veiculo||'—'}</td>
+<td>${p.cnpjVeiculo||'—'}</td>
+<td style="text-align:right">${p.qtdCotas||'—'}</td>
+<td style="text-align:right">${p.valorInvestido||'—'}</td>
+<td style="text-align:right">${p.pct||'—'}</td>
+</tr>`).join(''):`<tr><td colspan="9" style="color:var(--text3);font-style:italic;padding:10px 0">Nenhuma posição em CRA.</td></tr>`;
+const rowsFundo=posFundo.length?posFundo.map((p,i)=>`<tr>
+<td><button class="tbl-del-btn" onclick="delPos(${id},'fundo',${i})" title="Remover">✕</button></td>
+<td>${p.fundo||'—'}</td><td>${p.serie||'—'}</td><td>${p.cnpjFundo||'—'}</td>
+<td style="white-space:normal;max-width:200px;font-size:11px">${p.veiculo||'—'}</td>
+<td>${p.cnpjVeiculo||'—'}</td>
+<td style="text-align:right">${p.qtdCotas||'—'}</td>
+<td style="text-align:right">${p.valorInvestido||'—'}</td>
+<td style="text-align:right">${p.pct||'—'}</td>
+</tr>`).join(''):`<tr><td colspan="9" style="color:var(--text3);font-style:italic;padding:10px 0">Nenhuma posição em Fundo.</td></tr>`;
+const thCols='<th></th><th>Operação</th><th>Série</th><th>CNPJ/Cód.</th><th style="min-width:160px">Veículo</th><th>CNPJ Veículo</th><th style="text-align:right">Qtd. cotas</th><th style="text-align:right">Valor investido</th><th style="text-align:right">%</th>';
+body=`
+<div style="font-size:12px;font-weight:600;color:var(--gci);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">CRAs</div>
+<div class="tbl-wrap" style="margin-bottom:20px"><table class="inv-pos-table"><thead><tr>${thCols}</tr></thead><tbody>${rowsCRA}</tbody></table></div>
+<div style="font-size:12px;font-weight:600;color:var(--gci);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Fundos</div>
+<div class="tbl-wrap"><table class="inv-pos-table"><thead><tr>${thCols}</tr></thead><tbody>${rowsFundo}</tbody></table></div>
+<div style="margin-top:12px;display:flex;gap:8px">
+<button class="inv-edit-btn" style="color:#1a4a5c" onclick="openAddPos(${id},'cra')">+ Posição em CRA</button>
+<button class="inv-edit-btn" style="color:#1a4a5c" onclick="openAddPos(${id},'fundo')">+ Posição em Fundo</button>
+</div>`;}
+else if(invDetailTab==='contatos'){
+const ct=inv.contatos||[];
+const rows=ct.length?ct.map((c,i)=>`<tr>
+<td><button class="tbl-del-btn" onclick="delInvContato(${id},${i})" title="Remover">✕</button></td>
+<td>${c.data||'—'}</td><td>${c.operacao||'—'}</td><td>${c.investidor||inv.nome}</td>
+<td>${c.nomeContato||'—'}</td><td style="white-space:normal">${c.assunto||'—'}</td><td style="white-space:normal">${c.obs||'—'}</td>
+</tr>`).join(''):Array(2).fill(null).map(()=>'<tr><td></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>').join('');
+body=`<table class="inv-pos-table"><thead><tr><th></th><th>Data</th><th>Operação</th><th>Investidor</th><th>Nome do contato</th><th>Assunto/Solicitação</th><th>Observação</th></tr></thead><tbody>${rows}</tbody></table>
+<div style="margin-top:10px"><button class="inv-edit-btn" style="color:#1a4a5c" onclick="openAddContato(${id})">+ Adicionar contato</button></div>`;}
+else if(invDetailTab==='suitability'){
+const sf=[['Perfil do investidor',inv.suitPerfil],['Produto adequado',inv.suitProduto],['Capacidade financeira',inv.suitCapacidade],['Experiência',inv.suitExperiencia],['Horizonte de investimento',inv.suitHorizonte],['Tolerância a risco',inv.suitRisco],['Data da última atualização',inv.suitData],['Observações',inv.suitObs]];
+body=(function(){
+var rows=sf.map(function(p){return '<div class="frow" style="padding:7px 0"><span class="flabel">'+p[0]+'</span>'+fv(p[1])+'</div>';}).join('');
+return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0">'+rows+'</div><div style="margin-top:12px"><button class="inv-edit-btn" onclick="openInvModal('+id+',true)">✏️ Editar suitability</button></div>';
+})();}
+const html=`<div class="inv-detail-wrap">
+<div class="inv-detail-header">
+<div>
+<div class="inv-detail-name">${inv.nome} <span class="inv-type-tag" style="font-size:11px;background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">${inv.tipo||'—'}</span></div>
+<div class="inv-detail-sub">CNPJ: ${inv.cnpj||'—'} &nbsp;·&nbsp; Total investido: ${fmtBRL(total)}</div>
+</div>
+<button class="inv-detail-back" onclick="closeInvDetail()">← Voltar</button>
+</div>
+<div class="inv-detail-tabs">${navHtml}</div>
+<div class="inv-detail-body">${body}</div>
+</div>`;
+document.getElementById('inv-detail').innerHTML=html;
+document.getElementById('inv-detail').style.display='block';
+document.getElementById('inv-list').style.display='none';
+document.querySelectorAll('.inv-dtab').forEach(t=>{
+t.addEventListener('click',()=>{invDetailTab=t.dataset.dtab;renderInvDetail(invDetailId);});});}
+function closeInvDetail(){
+invDetailId=null;invDetailTab='cadastro';
+document.getElementById('inv-detail').style.display='none';
+document.getElementById('inv-list').style.display='block';
+renderInvList();}
+let invModalCtx={id:null,suitOnly:false};
+function openInvModal(id,suitOnly){
+invModalCtx={id:id||null,suitOnly:!!suitOnly};
+const inv=id?INVDATA.find(x=>x.id===id):{};
+const i=inv||{};
+const title=id?(suitOnly?'Editar Suitability':'Editar investidor'):'Novo investidor';
+let fields='';
+if(!suitOnly){
+fields=`<div class="inv-modal-grid">
+<div class="modal-field full"><label>Nome / Razão social *</label><input id="im-nome" value="${i.nome||''}" placeholder="Nome completo ou razão social"></div>
+<div class="modal-field"><label>CNPJ</label><input id="im-cnpj" value="${i.cnpj||''}" placeholder="00.000.000/0000-00"></div>
+<div class="modal-field"><label>Tipo</label><input id="im-tipo" value="${i.tipo||''}" placeholder="PF, PJ, Family Office, Gestora..."></div>
+<div class="modal-field"><label>E-mail</label><input id="im-email" value="${i.email||''}" placeholder="email@exemplo.com"></div>
+<div class="modal-field"><label>Telefone</label><input id="im-tel" value="${i.telefone||''}" placeholder="(00) 00000-0000"></div>
+<div class="modal-field"><label>Contato principal</label><input id="im-contato" value="${i.contatoPrincipal||''}" placeholder="Nome do responsável"></div>
+<div class="modal-field full"><label>Endereço</label><input id="im-end" value="${i.endereco||''}" placeholder="Cidade, Estado"></div>
+<div class="modal-field full"><label>Observações</label><textarea id="im-obs">${i.obs||''}</textarea></div>
+<div class="modal-field"><label>Status</label><select id="im-status"><option${i.status==='Ativo'||!i.status?' selected':''}>Ativo</option><option${i.status==='Inativo'?' selected':''}>Inativo</option></select></div>
+</div>`;}
+else{
+fields=`<div class="inv-modal-grid">
+<div class="modal-field"><label>Perfil do investidor</label><input id="im-suit-perfil" value="${i.suitPerfil||''}" placeholder="Conservador, Moderado, Arrojado..."></div>
+<div class="modal-field"><label>Produto adequado</label><input id="im-suit-produto" value="${i.suitProduto||''}" placeholder=""></div>
+<div class="modal-field"><label>Capacidade financeira</label><input id="im-suit-cap" value="${i.suitCapacidade||''}" placeholder=""></div>
+<div class="modal-field"><label>Experiência</label><input id="im-suit-exp" value="${i.suitExperiencia||''}" placeholder=""></div>
+<div class="modal-field"><label>Horizonte de investimento</label><input id="im-suit-hor" value="${i.suitHorizonte||''}" placeholder=""></div>
+<div class="modal-field"><label>Tolerância a risco</label><input id="im-suit-risco" value="${i.suitRisco||''}" placeholder=""></div>
+<div class="modal-field"><label>Data da última atualização</label><input id="im-suit-data" value="${i.suitData||''}" placeholder="dd/mm/aaaa"></div>
+<div class="modal-field full"><label>Observações</label><textarea id="im-suit-obs">${i.suitObs||''}</textarea></div>
+</div>`;}
+document.getElementById('inv-modal-title').textContent=title;
+document.getElementById('inv-modal-fields').innerHTML=fields;
+document.getElementById('inv-modal-overlay').classList.add('open');}
+function closeInvModal(){document.getElementById('inv-modal-overlay').classList.remove('open');}
+function saveInvModal(){
+if(invModalCtx.suitOnly){
+const inv=INVDATA.find(x=>x.id===invModalCtx.id);
+if(inv){inv.suitPerfil=document.getElementById('im-suit-perfil').value.trim();inv.suitProduto=document.getElementById('im-suit-produto').value.trim();inv.suitCapacidade=document.getElementById('im-suit-cap').value.trim();inv.suitExperiencia=document.getElementById('im-suit-exp').value.trim();inv.suitHorizonte=document.getElementById('im-suit-hor').value.trim();inv.suitRisco=document.getElementById('im-suit-risco').value.trim();inv.suitData=document.getElementById('im-suit-data').value.trim();inv.suitObs=document.getElementById('im-suit-obs').value.trim();}
+closeInvModal();if(invDetailId)renderInvDetail(invDetailId);return;}
+const nome=document.getElementById('im-nome').value.trim();
+if(!nome){alert('Nome obrigatório.');return;}
+if(invModalCtx.id){
+const inv=INVDATA.find(x=>x.id===invModalCtx.id);
+if(inv){inv.nome=nome;inv.cnpj=document.getElementById('im-cnpj').value.trim();inv.tipo=document.getElementById('im-tipo').value.trim();inv.email=document.getElementById('im-email').value.trim();inv.telefone=document.getElementById('im-tel').value.trim();inv.contatoPrincipal=document.getElementById('im-contato').value.trim();inv.endereco=document.getElementById('im-end').value.trim();inv.obs=document.getElementById('im-obs').value.trim();inv.status=document.getElementById('im-status').value;}
+} else {
+INVDATA.push({id:Date.now(),nome,cnpj:document.getElementById('im-cnpj').value.trim(),tipo:document.getElementById('im-tipo').value.trim(),email:document.getElementById('im-email').value.trim(),telefone:document.getElementById('im-tel').value.trim(),contatoPrincipal:document.getElementById('im-contato').value.trim(),endereco:document.getElementById('im-end').value.trim(),obs:document.getElementById('im-obs').value.trim(),status:document.getElementById('im-status').value,posicoes:[],contatos:[]});}
+closeInvModal();renderInvList();if(invDetailId)renderInvDetail(invDetailId);}
+let posCtx={invId:null,tipo:'cra'};
+function openAddPos(invId,tipo){
+posCtx={invId,tipo:tipo||'cra'};
+document.getElementById('pos-modal-title').textContent=tipo==='fundo'?'Adicionar posição em Fundo':'Adicionar posição em CRA';
+document.getElementById('pm-label-op').textContent=tipo==='fundo'?'Fundo':'CRA';
+document.getElementById('pos-modal-overlay').classList.add('open');}
+function closePosModal(){document.getElementById('pos-modal-overlay').classList.remove('open');}
+function savePosModal(){
+const inv=INVDATA.find(x=>x.id===posCtx.invId);if(!inv)return;
+const val=document.getElementById('pm-valor').value.trim();
+if(posCtx.tipo==='fundo'){
+inv.posicoesFundo=inv.posicoesFundo||[];
+inv.posicoesFundo.push({fundo:document.getElementById('pm-cra').value.trim(),cnpjFundo:'',serie:document.getElementById('pm-serie').value.trim(),veiculo:'',cnpjVeiculo:'',qtdCotas:document.getElementById('pm-cotas').value.trim(),valorInvestido:val,pct:document.getElementById('pm-pct').value.trim()});
+} else {
+inv.posicoesCRA=inv.posicoesCRA||[];
+inv.posicoesCRA.push({cra:document.getElementById('pm-cra').value.trim(),codigoIF:'',serie:document.getElementById('pm-serie').value.trim(),veiculo:'',cnpjVeiculo:'',qtdCotas:document.getElementById('pm-cotas').value.trim(),valorInvestido:val,pct:document.getElementById('pm-pct').value.trim()});
+}
+closePosModal();renderInvDetail(posCtx.invId);}
+function delPos(invId,tipo,idx){
+if(!confirm('Remover posição?'))return;
+const inv=INVDATA.find(x=>x.id===invId);
+if(inv){
+if(tipo==='fundo'&&inv.posicoesFundo) inv.posicoesFundo.splice(idx,1);
+else if(inv.posicoesCRA) inv.posicoesCRA.splice(idx,1);
+}
+renderInvDetail(invId);}
+let ctInvCtx={invId:null};
+function openAddContato(invId){ctInvCtx={invId};document.getElementById('ct-modal-overlay').classList.add('open');}
+function closeCtModal(){document.getElementById('ct-modal-overlay').classList.remove('open');}
+function saveCtModal(){
+const inv=INVDATA.find(x=>x.id===ctInvCtx.invId);if(!inv)return;
+inv.contatos=inv.contatos||[];
+inv.contatos.push({data:document.getElementById('ctm-data').value.trim(),operacao:document.getElementById('ctm-op').value.trim(),investidor:inv.nome,nomeContato:document.getElementById('ctm-nome').value.trim(),assunto:document.getElementById('ctm-assunto').value.trim(),obs:document.getElementById('ctm-obs').value.trim()});
+closeCtModal();renderInvDetail(ctInvCtx.invId);}
+function delInvContato(invId,idx){
+if(!confirm('Remover contato?'))return;
+const inv=INVDATA.find(x=>x.id===invId);
+if(inv&&inv.contatos)inv.contatos.splice(idx,1);
+renderInvDetail(invId);}
+document.getElementById('btn-add-inv')?.addEventListener('click',()=>openInvModal());
+document.getElementById('srch-inv')?.addEventListener('input',renderInvList);
+document.getElementById('inv-modal-cancel')?.addEventListener('click',closeInvModal);
+document.getElementById('inv-modal-save')?.addEventListener('click',saveInvModal);
+document.getElementById('inv-modal-overlay')?.addEventListener('click',function(e){if(e.target===this)closeInvModal();});
+document.getElementById('pos-modal-cancel')?.addEventListener('click',closePosModal);
+document.getElementById('pos-modal-save')?.addEventListener('click',savePosModal);
+document.getElementById('pos-modal-overlay')?.addEventListener('click',function(e){if(e.target===this)closePosModal();});
+document.getElementById('ct-modal-cancel')?.addEventListener('click',closeCtModal);
+document.getElementById('ct-modal-save')?.addEventListener('click',saveCtModal);
+document.getElementById('ct-modal-overlay')?.addEventListener('click',function(e){if(e.target===this)closeCtModal();});
+document.addEventListener('click',function(e){
+const row=e.target.closest('.inv-row');
+if(row&&!e.target.closest('button')){
+const id=parseInt(row.dataset.invId);
+invDetailTab='cadastro';renderInvDetail(id);return;}});
+document.querySelectorAll('.main-tab').forEach(t=>{
+t.addEventListener('click',()=>{
+document.querySelectorAll('.main-tab').forEach(x=>x.classList.remove('active'));
+t.classList.add('active');
+const sec=t.dataset.section;
+document.getElementById('section-cras').style.display=sec==='cras'?'block':'none';
+document.getElementById('section-fundos').style.display=sec==='fundos'?'block':'none';
+document.getElementById('section-investidores').style.display=sec==='investidores'?'block':'none';
+if(sec==='investidores'){renderInvList();}
+if(sec==='fundos'){renderFundos();updateFchipCounts();}});});
+var TABS_FUNDO=[
+{id:'info',label:'Informações do fundo'},
+{id:'carteira',label:'Carteira do fundo'},
+{id:'prest',label:'Prestadores de serviço'},
+{id:'lim',label:'Limites de concentração'},
+{id:'cov',label:'Covenants'},
+{id:'perfil',label:'Perfil da empresa — cedente/devedor'},
+{id:'assembleias',label:'Assembleias'},
+{id:'contatos',label:'Contato com investidores'},
+{id:'titulares',label:'Principais cotistas'}
+];
+var DATA_FUNDOS=[
+ {id:101,nome:'AGROVITA FIDC',cedente:'Ceres Asset / ID Corretora',status:'Vigente',nota:'',
+  info:{'Denominação do fundo':'AGROVITA Fundo de Investimento em Direitos Creditórios Responsabilidade Limitada','CNPJ do fundo':'53.125.630/0001-59','Ticker':'Colocação privada — cotas admitidas a depósito na B3 (MDA/Fundos21)','Tipo de condomínio':'Fechado — resgate somente ao término do prazo ou liquidação antecipada','Classes/Cotas':'Classe Única sem subclasses e sem subordinação. Categoria ANBIMA: Multicarteira. Cotas escriturais com direito de preferência proporcional em novas emissões','Data de constituição':'Regulamento datado de 25/07/2023 (1ª versão)','Prazo do fundo':'Indeterminado — observados os Eventos de Liquidação Antecipada','Volume captado':'Não consta — Valor Nominal Unitário de referência: R$ 1.000,00','Qtd. de emissões':'Não consta'},
+  prest:{'Administrador':'ID CORRETORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A. — CNPJ 16.695.922/0001-09','Gestor':'CERES ASSET GESTÃO DE INVESTIMENTOS LTDA. — CNPJ 40.962.925/0001-38','Custodiante':'ID CORRETORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A. (mesmo Administrador) — custódia e controladoria inclusas na Taxa de Administração','Auditor independente':'Não nominado no Regulamento','Escriturador de cotas':'ID CORRETORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A.','Assessor jurídico':'Não nominado no Regulamento','Servicer de cobrança':'CERES INVESTIMENTOS E CONSULTORIA LTDA. — CNPJ 34.250.750/0001-33, Uberaba/MG (cobrança extraordinária e Consultoria Especializada)'},
+  carteira:{'PL total do fundo (R$)':'Obter na carteira diária / informe mensal do Administrador','Composição da carteira':'CPR-F com liquidação financeira, notas comerciais e duplicatas mercantis. Alocação mínima de 50% do PL em DCs após 180 dias. Liquidez em títulos públicos, CDB, cotas de fundos DI. Vedados derivativos e investimentos no exterior','Critérios de elegibilidade':'DCs não vencidos; prazo entre 15 e 1.500 dias; devedor fora de recuperação; moeda corrente nacional; passíveis de registro. Verificação definitiva pela Gestora + Consultoria','Razão de garantia':'Não aplicável — Classe Única sem subordinação. Mecanismo de proteção: Reserva de Caixa mínima de 3 meses de despesas'},
+  lim:{'Cedente (% do PL)':'Sem limite específico por Cedente. Administradora/Gestora/Consultoria e relacionadas: até 100%','Sacado (% do PL)':'Mesmo Devedor ou coobrigação: até 100%. Cotas de mesma classe de fundo: até 100% (até 50% se houver partes relacionadas). Ativos de emissão de prestadores: até 100%'},
+  cov:[{nome:'Patrimônio Líquido negativo',limite:'PL negativo — Evento de Avaliação',periodicidade:'Apuração diária'},{nome:'Reserva de Caixa',limite:'Mínimo de 3 meses de despesas estimadas — cura até amortização subsequente ou 15 dias úteis',periodicidade:'Último dia útil de cada mês'},{nome:'Alocação mínima em DCs',limite:'Mínimo de 50% do PL após 180 dias do início das atividades',periodicidade:'Diária'},{nome:'Rebaixamento de rating das cotas',limite:'3 níveis abaixo do original a qualquer tempo; ou 2 níveis após 2 revisões consecutivas',periodicidade:'A cada revisão de rating'}],
+  perfil:{'Razão social':'AGROVITA FIDC — cedentes do segmento agroindustrial','Atividade principal':'FIDC multicarteira — aquisição de DCs do agronegócio (CPR-F, notas comerciais e duplicatas)'},
+  assembleias:[],contatos:[],titulares:[]},
+
+ {id:102,nome:'BAVIERA PURA ORIGEM FIAGRO',cedente:'EAO Empreendimentos / Ceres Asset',status:'Vigente',nota:'',
+  info:{'Denominação do fundo':'BAVIERA PURA ORIGEM FIAGRO – RESPONSABILIDADE LIMITADA','CNPJ do fundo':'51.707.901/0001-59','Ticker':'Emissão pública sob Resolução CVM 160 (rito automático). Colocada pelo Coordenador Líder','Tipo de condomínio':'Fechado — condomínio de natureza especial. Resgate não permitido, salvo liquidação','Classes/Cotas':'Classe Única — 3 subclasses: Cotas Seniores, Cotas Subordinadas Mezanino e Cotas Subordinadas Júnior. ANBIMA: Agro, Indústria e Comércio — Agronegócio. Cotas Subordinadas Júnior devem permanecer majoritariamente com a Cedente','Data de constituição':'Regulamento datado de 08/07/2025','Prazo do fundo':'Indeterminado — prazo de cada emissão conforme Suplemento','Volume captado':'Não consta — Valor Nominal Unitário de referência: R$ 1.000,00','Qtd. de emissões':'Não consta'},
+  prest:{'Administrador':'SINGULARE CORRETORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A. — CNPJ 62.285.390/0001-40','Gestor':'CERES ASSET GESTÃO DE INVESTIMENTOS LTDA. — CNPJ 40.962.925/0001-38','Custodiante':'SINGULARE CORRETORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A. (mesmo Administrador) — taxa máxima de 0,03% a.a. inclusa na Taxa de Administração','Auditor independente':'Não nominado no Regulamento','Escriturador de cotas':'SINGULARE CORRETORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A.','Assessor jurídico':'Não nominado no Regulamento','Servicer de cobrança':'CERES INVESTIMENTOS E CONSULTORIA LTDA. — CNPJ 34.250.750/0001-33, Uberaba/MG (Agente de Cobrança e Consultora Especializada — Taxa de Consultoria de 0,60% a.a.)'},
+  carteira:{'PL total do fundo (R$)':'Obter na carteira diária / informe mensal do Administrador','Composição da carteira':'Duplicatas mercantis eletrônicas ou escriturais de compra e venda de gado bovino em leilões, cedidas pela EAO EMPREENDIMENTOS AGROPECUÁRIOS. Alocação mínima > 50% do PL após 180 dias. Liquidez em títulos públicos, renda fixa, compromissadas. Vedados derivativos (salvo proteção), renda variável, câmbio e investimento no exterior','Critérios de elegibilidade':'17 condições cumulativas: DCs não vencidos; prazo ≤ 60 dias antes do vencimento das cotas; valor por bovino ≤ R$ 400.000,00; devedor fora de falência/recuperação; sem ônus; performados; sem contestação judicial; pagáveis por boleto; conformidade socioambiental. Verificação pela Gestora + Consultora','Razão de garantia':'Índice de Subordinação Sênior: PL/Cotas Seniores ≥ 200% (mín. 50% do PL em cotas subordinadas). Índice de Subordinação Mezanino: PL/(Mezanino+Seniores) ≥ 125% (mín. 20% do PL em Cotas Júnior). Apuração diária pela Gestora'},
+  lim:{'Cedente (% do PL)':'Cedente única — EAO EMPREENDIMENTOS: até 100%. DCs de partes relacionadas da Cedente: vedado. Ativos de emissão de prestadores e relacionadas: vedado','Sacado (% do PL)':'Mesmo Devedor/coobrigação: até 20%. Maior Devedor: até 5%. 5 maiores: até 15%. 10 maiores: até 25%. 25 maiores: até 35%. 50 maiores: até 50%. (Nos primeiros 90 dias, limites incidem sobre R$ 50.000.000,00)'},
+  cov:[{nome:'Índice de Inadimplemento Histórico',limite:'Soma dos DCs inadimplidos (incl. PDD 100%) / PL ≤ 15%',periodicidade:'Diária pela Gestora'},{nome:'Índice de Subordinação Sênior',limite:'PL / Cotas Seniores ≥ 200%',periodicidade:'Diária pela Gestora — reporte mensal aos Cotistas'},{nome:'Índice de Subordinação Mezanino',limite:'PL / (Mezanino + Seniores) ≥ 125%',periodicidade:'Diária pela Gestora — reporte mensal aos Cotistas'},{nome:'Alocação Mínima em DCs',limite:'> 50% do PL em até 180 dias de cada Integralização (prorrogável uma vez)',periodicidade:'Diária'},{nome:'Reserva de Caixa',limite:'Maior entre despesas dos 90 dias seguintes e 0,50% do PL — cura em 10 dias úteis',periodicidade:'Último dia útil de cada mês'},{nome:'Reserva de Amortização',limite:'50% da próxima amortização a partir de D-15 e 100% a partir de D-5',periodicidade:'Por data de amortização'},{nome:'Titularidade das Cotas Subordinadas Júnior',limite:'Maior quantidade deve permanecer com a Cedente ou Partes Relacionadas',periodicidade:'Contínua, verificada pela Gestora'}],
+  perfil:{'Razão social':'EAO EMPREENDIMENTOS AGROPECUÁRIOS E ORGANIZAÇÕES LTDA. — CNPJ 00.141.269/0001-98, Ibicuí/BA','Atividade principal':'Compra e venda de gado bovino em leilões — cedente única do FIAGRO'},
+  assembleias:[],contatos:[],titulares:[
+   {investidor:'Az Quest',veiculo:'AZ QUEST LUNA FI NAS CADEIAS PROD. DO AGRONEG.',cnpj:'49.863.204/0001-45',classe:'Mezanino 1',qtdCotas:'11.647,43',pct:''},
+   {investidor:'Az Quest',veiculo:'AZ QUEST SOLE FI NAS CADEIAS PROD. DO AGRONEG.',cnpj:'44.625.826/0001-11',classe:'Mezanino 1',qtdCotas:'1.585,58',pct:''},
+   {investidor:'Az Quest',veiculo:'AZ QUEST LUNA FI NAS CADEIAS PROD. DO AGRONEG.',cnpj:'49.863.204/0001-45',classe:'Sênior 1',qtdCotas:'18.398,74',pct:''},
+   {investidor:'Az Quest',veiculo:'AZ QUEST SOLE FI NAS CADEIAS PROD. DO AGRONEG.',cnpj:'44.625.826/0001-11',classe:'Sênior 1',qtdCotas:'2.335,98',pct:''},
+   {investidor:'Bradesco Asset',veiculo:'BRADESCO HIGH YIELD 3 FIC DE FI',cnpj:'59.749.356/0001-75',classe:'Sênior 2',qtdCotas:'1.500',pct:''},
+   {investidor:'Bradesco Asset',veiculo:'BRAM HIGH YIELD FIDC II RL',cnpj:'44.230.592/0001-03',classe:'Sênior 2',qtdCotas:'1.800',pct:''},
+   {investidor:'Bradesco Asset',veiculo:'BRAM HIGH YIELD FIDC III RL',cnpj:'51.269.670/0001-49',classe:'Sênior 2',qtdCotas:'3.000',pct:''},
+   {investidor:'Bradesco Asset',veiculo:'BRAM WAREHOUSE FIF - CLASSE RENDA',cnpj:'62.209.138/0001-52',classe:'Sênior 2',qtdCotas:'700',pct:''},
+   {investidor:'Itaú Asset',veiculo:'ITAU ASSET RURAL FIAGRO RESPONSABILIDADE LIMITADA',cnpj:'42.479.593/0001-60',classe:'Sênior 1',qtdCotas:'16.800',pct:''}
+  ]},
+
+ {id:103,nome:'GRUPO AGRO FIAGRO',cedente:'Agro Shop / Disagro / Pro Agro / Vertentes',status:'Vigente',nota:'',
+  info:{'Denominação do fundo':'GRUPO AGRO FIAGRO – DIREITOS CREDITÓRIOS – RESPONSABILIDADE LIMITADA','CNPJ do fundo':'63.866.936/0001-10 (confirmar no cartão CNPJ)','Ticker':'Colocação privada — cotas depositáveis no MDA e Fundos21','Tipo de condomínio':'Fechado','Classes/Cotas':'Classe Única — 2 subclasses: Cotas Seniores (múltiplas séries) e Cotas Subordinadas Júnior (negociáveis apenas entre Partes Relacionadas da Cedente). ANBIMA: Agro, Indústria e Comércio — Recebíveis Comerciais. Cotas Seniores e Júnior sem classificação de risco','Data de constituição':'Regulamento datado de 17/12/2025','Prazo do fundo':'Indeterminado — prazo de cada subclasse conforme Apêndice','Volume captado':'Não consta — Valor Nominal Unitário de referência: R$ 1.000,00','Qtd. de emissões':'Não consta'},
+  prest:{'Administrador':'VÓRTX DISTRIBUIDORA DE TÍTULOS E VALORES MOBILIÁRIOS LTDA. — CNPJ 22.610.500/0001-88','Gestor':'CERES ASSET GESTÃO DE INVESTIMENTOS LTDA. — CNPJ 40.962.925/0001-38','Custodiante':'VÓRTX DTVM LTDA. (mesmo Administrador) — custódia e controladoria inclusas na Taxa de Administração; verificação amostral de lastro: R$ 5.000,00/trimestre','Auditor independente':'Não nominado no Regulamento','Escriturador de cotas':'VÓRTX DTVM LTDA. — R$ 2.000,00/mês + custo por cotista escalonado','Assessor jurídico':'Não nominado. Foro: Comarca de São Paulo/SP','Servicer de cobrança':'CERES INVESTIMENTOS E CONSULTORIA LTDA. — CNPJ 34.250.750/0001-33, Uberaba/MG (Agente de Cobrança: 0,25% a.a. mín. R$ 6.500,00/mês; Consultoria Especializada: 0,25% a.a. mín. R$ 6.500,00/mês)'},
+  carteira:{'PL total do fundo (R$)':'Obter na carteira diária / informe mensal do Administrador','Composição da carteira':'DCs de compra e venda de produtos do agronegócio cedidos por AGRO SHOP LTDA., DISAGRO, PRO AGRO e VERTENTES INSUMOS e seus Grupos Econômicos. Alocação mínima > 67% do PL em 180 dias. Liquidez em títulos públicos, renda fixa, compromissadas. Derivativos apenas para proteção ou troca de indexador','Critérios de elegibilidade':'Moeda nacional; não vencidos; prazo ≤ 360 dias e ≤ 90 dias antes do vencimento final das Seniores; concentração por Devedor (incl. Grupo Econômico) ≤ 3% e 5 maiores ≤ 15% (cada ≤ 4%); devedor sem atraso > 30 dias; Devedores não avaliados ≤ 10% do PL','Razão de garantia':'Índice de Subordinação Júnior: Cotas Júnior / PL ≥ 20%. Índice de Subordinação Sênior: Cotas Seniores / PL = 80% (teto). Exigíveis após 180 dias da 1ª Integralização. Apuração diária'},
+  lim:{'Cedente (% do PL)':'AGRO SHOP, DISAGRO, PRO AGRO e VERTENTES: sem limite individual. DCs de prestadores e relacionadas: vedado','Sacado (% do PL)':'Mesmo Devedor / Grupo Econômico: até 20% (Regulamento) / até 3% (Critério de Elegibilidade). 5 maiores Devedores: até 15%, cada ≤ 4%. Não avaliados: até 10%'},
+  cov:[{nome:'Índice de Inadimplemento 30 dias',limite:'DCs vencidos entre 1º e 30º dia: até 14% do PL',periodicidade:'Mensal pela Gestora'},{nome:'Índice de Inadimplemento 60 dias',limite:'DCs vencidos entre 31º e 60º dia: até 7% do PL',periodicidade:'Mensal pela Gestora'},{nome:'Índice de Inadimplemento 90 dias',limite:'DCs vencidos entre 61º e 90º dia: até 4% do PL',periodicidade:'Mensal pela Gestora'},{nome:'Índice de Repasse + Recompra',limite:'DCs pagos de forma diversa do previsto no mês anterior / PL: até 10%',periodicidade:'5º dia útil de cada mês'},{nome:'Índice de Resolução',limite:'DCs com cessão resolvida de forma diversa / PL: até 5%',periodicidade:'5º dia útil de cada mês'},{nome:'Índice de Subordinação Júnior',limite:'Cotas Júnior / PL ≥ 20%; Seniores / PL = 80%',periodicidade:'Diária'},{nome:'Índice de Alocação Mínima',limite:'> 50% do PL (Regulamento) / > 67% em 180 dias (item 7.3.1)',periodicidade:'Mensal (índice) e diária (limites)'},{nome:'Reserva de Caixa',limite:'Encargos estimados para os 3 meses calendário seguintes ao final de cada dia útil',periodicidade:'Diária'},{nome:'Patrimônio Líquido negativo',limite:'PL negativo',periodicidade:'Diária'}],
+  perfil:{'Razão social':'Cedentes: AGRO SHOP LTDA. (CNPJ 42.813.402/0001-55), DISAGRO (29.285.082/0001-40), PRO AGRO (23.682.660/0001-03) e VERTENTES INSUMOS (07.863.957/0001-00)','Atividade principal':'Distribuição e venda de produtos do agronegócio — compra e venda de insumos agrícolas'},
+  assembleias:[],contatos:[],titulares:[
+   {investidor:'BTG Asset',veiculo:'CERES BTG URA AGRO 2 FUNDO DE INVESTIMENTO NAS CADEIAS PRODUTIVAS DO AGRONEGOCIO RESP LIMITADA',cnpj:'63.326.551/0001-60',classe:'Sênior',qtdCotas:'23.420,68',pct:''}
+  ]},
+
+ {id:104,nome:'METROPOL FIDC',cedente:'Nava & Simon / Grupo Plantar',status:'Vigente',nota:'',
+  info:{'Denominação do fundo':'METROPOL FUNDO DE INVESTIMENTO EM DIREITOS CREDITÓRIOS','CNPJ do fundo':'57.284.265/0001-86','Ticker':'Não consta — destinado a Investidores Profissionais','Tipo de condomínio':'Fechado — cotas resgatadas somente ao término do prazo ou liquidação','Classes/Cotas':'Classe única — 2 subclasses: Cotas Seniores e Cotas Subordinadas Júnior. ANBIMA: Multicarteira Agro, Indústria e Comércio. Cotas escriturais','Data de constituição':'Regulamento datado de 17/02/2025','Prazo do fundo':'Definido por subclasse nos respectivos Apêndices','Volume captado':'Não consta','Qtd. de emissões':'Não consta'},
+  prest:{'Administrador':'SINGULARE CORRETORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A. — CNPJ 62.285.390/0001-40','Gestor':'CERES ASSET GESTÃO DE INVESTIMENTOS LTDA. — CNPJ 40.962.925/0001-38','Custodiante':'SINGULARE CTVM S.A. (mesmo Administrador) — Taxa de Administração de 0,30% a.a. engloba administração, controladoria, custódia e escrituração','Auditor independente':'Não nominado no Regulamento','Escriturador de cotas':'SINGULARE CORRETORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A.','Assessor jurídico':'Não nominado no Regulamento','Servicer de cobrança':'CERES INVESTIMENTOS E CONSULTORIA LTDA. — CNPJ 34.250.750/0001-33, Uberaba/MG (Agente de Cobrança e Consultoria Especializada)'},
+  carteira:{'PL total do fundo (R$)':'Obter na carteira diária / informe mensal do Administrador','Composição da carteira':'Notas comerciais e CDCAs emitidos diretamente pelos Devedores (NAVA & SIMON e empresas do GRUPO PLANTAR) — Fundo como credor originário, sem Cedente. Alocação mínima > 67% do PL em 180 dias. Liquidez em títulos públicos, CDB AAA (liquidez diária), cotas de fundos DI. Vedado investimento no exterior','Critérios de elegibilidade':'Valor nominal mínimo de R$ 100.000,00; moeda nacional; não vencidos; prazo ≤ 720 dias; prazo ≥ 10 dias da emissão; devedor sem atraso com o Fundo; maior Devedor ≤ 80% do PL; vencimento ≤ ao da emissão de cotas mais longa. Verificação pela Gestora','Razão de garantia':'Índice de Subordinação Sênior: Cotas Seniores / PL — máximo 80% (teto). Índice de Subordinação Júnior: Cotas Júnior / PL — mínimo 20%. Apuração diária pela Administradora'},
+  lim:{'Cedente (% do PL)':'Não há Cedente — Fundo adquire diretamente dos Devedores. DCs de prestadores e relacionadas: sem limite','Sacado (% do PL)':'Maior Devedor: até 80% do PL. Devedores nominados: NAVA & SIMON e empresas do GRUPO PLANTAR'},
+  cov:[{nome:'D90+ (inadimplência)',limite:'DCs inadimplidos há mais de 90 dias > 10% da Carteira — Evento de Avaliação',periodicidade:'Verificação pela Gestora'},{nome:'Índice de Subordinação Sênior/Júnior',limite:'Sênior máx. 80% do PL; Júnior mín. 20% do PL',periodicidade:'Diária pela Administradora — reporte mensal aos Cotistas'},{nome:'Alocação mínima em DCs',limite:'> 67% do PL em até 180 dias do início das atividades',periodicidade:'Diária'},{nome:'Reserva de Caixa',limite:'3 meses de despesas estimadas — cura até amortização subsequente ou 15 dias úteis',periodicidade:'Último dia útil de cada mês'},{nome:'Não pagamento de amortização',limite:'Qualquer parcela não sanada em 15 dias úteis consecutivos',periodicidade:'Por data de amortização'},{nome:'Patrimônio Líquido negativo',limite:'PL negativo',periodicidade:'Diária'},{nome:'Recuperação judicial / falência de Devedor',limite:'Qualquer ocorrência, independente de deferimento',periodicidade:'Contínua'}],
+  perfil:{'Razão social':'Devedores: NAVA & SIMON e empresas do GRUPO PLANTAR','Atividade principal':'Agroindústria — Fundo adquire notas comerciais e CDCAs diretamente dos Devedores (sem Cedente intermediária)'},
+  assembleias:[],contatos:[],titulares:[]},
+
+ {id:105,nome:'MTRIOS FIDC',cedente:'Grupo Rio/RC',status:'Vigente',nota:'',
+  info:{'Denominação do fundo':'MTRios FUNDO DE INVESTIMENTO EM DIREITOS CREDITÓRIOS','CNPJ do fundo':'64.041.032/0001-18','Ticker':'Não consta — Apêndice prevê oferta privada ou pública conforme o caso','Tipo de condomínio':'Fechado — classe única de cotas sob condomínio fechado','Classes/Cotas':'Classe única — 2 subclasses: Cotas Sêniores e Cotas Subordinadas Júnior. ANBIMA: Multicarteira Agro, Indústria e Comércio','Data de constituição':'Regulamento datado de 10/03/2026','Prazo do fundo':'Definido por subclasse nos respectivos Apêndices','Volume captado':'Não consta','Qtd. de emissões':'Não consta'},
+  prest:{'Administrador':'QI CORRETORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A. — CNPJ 62.285.390/0001-40 (denominação atual da Singulare CTVM — mesma instituição)','Gestor':'CERES ASSET GESTÃO DE INVESTIMENTOS LTDA. — CNPJ 40.962.925/0001-38','Custodiante':'QI CORRETORA CTVM S.A. (mesmo Administrador) — Taxa de Administração de 0,30% a.a. engloba administração, controladoria, custódia e escrituração','Auditor independente':'Não nominado no Regulamento','Escriturador de cotas':'QI CORRETORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A.','Assessor jurídico':'Não nominado no Regulamento','Servicer de cobrança':'CERES INVESTIMENTOS E CONSULTORIA LTDA. — CNPJ 34.250.750/0001-33, Uberaba/MG. Taxa de Cobrança de 0,2% a.a. sobre o PL. (Atenção: Regulamento atribui CNPJ 22.303.472/0001-56 ao Agente de Cobrança — possível erro; confirmar com a Administradora)'},
+  carteira:{'PL total do fundo (R$)':'Obter na carteira diária / informe mensal do Administrador','Composição da carteira':'DCs cedidos por cedentes do grupo RIO/RC (duplicatas e notas comerciais), com Devedores da agroindústria. Alocação mínima > 67% do PL em 180 dias. Duplicatas sem coobrigação do cedente (salvo recompra contratual). Notas Comerciais com garantia fidejussória dos sócios das Cedentes. Liquidez em títulos públicos, CDB AAA DI e cotas de fundos DI','Critérios de elegibilidade':'Moeda nacional; não vencidos; devedor sem atraso com o Fundo; vencimento ≤ ao da emissão de cotas mais longa. Verificação pela Gestora','Razão de garantia':'Índice de Subordinação Sênior: Cotas Seniores / PL — mínimo 80% (atenção: redação do Regulamento inverte o sentido econômico — confirmar). Índice de Subordinação Júnior: Cotas Júnior / PL — mínimo 20%. Apuração diária pela Administradora'},
+  lim:{'Cedente (% do PL)':'Rio Azul, Rio do Peixe, Rio Branco, Rio Cedro, RC Máquinas, Rio Celeste, Rio do Ouro, RC Máquinas Sinop e Partes Relacionadas: sem limite individual no Regulamento','Sacado (% do PL)':'Mesmo Devedor/coobrigação: até 20% do PL (Anexo Normativo II, ampliável conforme §3º do art. 45)'},
+  cov:[{nome:'D90+ (inadimplência)',limite:'DCs inadimplidos há mais de 90 dias > 10% da Carteira — Evento de Avaliação',periodicidade:'Verificação pela Gestora'},{nome:'Índice de Subordinação Sênior/Júnior',limite:'Sênior 80% do PL; Júnior mín. 20% do PL',periodicidade:'Diária pela Administradora — reporte mensal'},{nome:'Alocação mínima em DCs',limite:'> 67% do PL em até 180 dias do início das atividades',periodicidade:'Diária'},{nome:'Reserva de Caixa',limite:'3 meses de despesas estimadas — cura até amortização subsequente ou 15 dias úteis',periodicidade:'Último dia útil de cada mês'},{nome:'Não pagamento de amortização',limite:'Qualquer parcela não sanada em 15 dias úteis',periodicidade:'Por data de amortização'},{nome:'Patrimônio Líquido negativo',limite:'PL negativo',periodicidade:'Diária'},{nome:'Recuperação judicial / falência de Devedor',limite:'Qualquer ocorrência',periodicidade:'Contínua'}],
+  perfil:{'Razão social':'Cedentes Grupo Rio/RC: Rio Azul (CNPJ 46.367.206/0001-55), Rio do Peixe (44.339.610/0001-90), Rio Branco (14.526.338/0001-96), Rio Cedro (22.303.472/0001-56), RC Máquinas (31.587.001/0001-08), Rio Celeste (57.443.958/0001-74), Rio do Ouro (57.162.080/0001-07) e RC Máquinas Sinop (48.529.073/0001-00)','Atividade principal':'Comércio e representação de produtos da agroindústria'},
+  assembleias:[],contatos:[],titulares:[
+   {investidor:'Az Quest',veiculo:'RIO CEDRO COMERCIO E REPRESENTACOES LTDA',cnpj:'22.303.472/0001-56',classe:'Única',qtdCotas:'4.981,07',pct:''}
+  ]},
+
+ {id:106,nome:'PAIOL FIDC',cedente:'Plantun / M.S. Comercial / Matupá / Mutum / Fartura / Juara',status:'Vigente',nota:'',
+  info:{'Denominação do fundo':'PAIOL FUNDO DE INVESTIMENTO EM DIREITOS CREDITÓRIOS','CNPJ do fundo':'Em obtenção na data do Regulamento (24/02/2026) — consultar cartão CNPJ após constituição','Ticker':'Não consta no Regulamento','Tipo de condomínio':'Fechado — classe única de cotas sob condomínio fechado','Classes/Cotas':'Classe única — 2 subclasses: Cotas Sêniores e Cotas Subordinadas Júnior. ANBIMA: Multicarteira Agro, Indústria e Comércio. Destinado exclusivamente a Investidores Profissionais','Data de constituição':'Regulamento datado de 24/02/2026 — Fundo em constituição','Prazo do fundo':'Definido por subclasse nos respectivos Apêndices','Volume captado':'Não consta — Fundo em constituição','Qtd. de emissões':'Não consta'},
+  prest:{'Administrador':'SINGULARE CORRETORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A. — CNPJ 62.285.390/0001-40','Gestor':'CERES ASSET GESTÃO DE INVESTIMENTOS LTDA. — CNPJ 40.962.925/0001-38','Custodiante':'SINGULARE CTVM S.A. (mesmo Administrador) — Taxa de Administração de 0,30% a.a. engloba administração, controladoria, custódia e escrituração','Auditor independente':'Não nominado no Regulamento','Escriturador de cotas':'SINGULARE CORRETORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A.','Assessor jurídico':'Não nominado no Regulamento','Servicer de cobrança':'CERES INVESTIMENTOS E CONSULTORIA LTDA. — CNPJ 34.250.750/0001-33, Uberaba/MG. Taxa de Cobrança de 0,1% a.a. (reajustada pelo IPCA). Consultoria Especializada: 0,1% a.a. mín. R$ 8.500,00/mês'},
+  carteira:{'PL total do fundo (R$)':'Fundo em constituição — Obter após início das atividades','Composição da carteira':'DCs cedidos pelas Cedentes nominadas (revendas de insumos agrícolas): duplicatas e notas comerciais com Devedores da agroindústria. Admitida cessão por terceiros aprovados pela Gestora, desde que originados pelas Cedentes listadas. Alocação mínima > 67% do PL em 180 dias. Duplicatas sem coobrigação do cedente (salvo recompra contratual). Liquidez em títulos públicos, compromissadas, CDB AAA DI e cotas de fundos DI','Critérios de elegibilidade':'Moeda nacional; não vencidos; devedor sem atraso com o Fundo. Verificação pela Gestora (elegibilidade) e Consultoria Especializada (condições de cessão)','Razão de garantia':'Índice de Subordinação Sênior: Cotas Seniores / PL — no máximo 80% (teto — único dos três regulamentos do grupo com redação correta). Índice de Subordinação Júnior: Cotas Júnior / PL — mínimo 20%. Apuração diária pela Administradora'},
+  lim:{'Cedente (% do PL)':'PLANTUN, M.S. COMERCIAL, MATUPÁ, MUTUM, FARTURA, JUARA e Partes Relacionadas: sem limite individual no Regulamento','Sacado (% do PL)':'Não aplicável — destinado exclusivamente a Investidores Profissionais (limites gerais do Regulamento não escalonados)'},
+  cov:[{nome:'D90+ (inadimplência)',limite:'DCs inadimplidos há mais de 90 dias > 10% da Carteira — Evento de Avaliação',periodicidade:'Verificação pela Gestora'},{nome:'Índice de Subordinação Sênior/Júnior',limite:'Sênior máx. 80% do PL; Júnior mín. 20% do PL',periodicidade:'Diária pela Administradora — reporte mensal'},{nome:'Alocação mínima em DCs',limite:'> 67% do PL em até 180 dias do início das atividades',periodicidade:'Diária'},{nome:'Reserva de Caixa',limite:'3 meses de despesas estimadas — cura até amortização subsequente ou 15 dias úteis',periodicidade:'Último dia útil de cada mês'},{nome:'Não pagamento de amortização',limite:'Qualquer parcela não sanada em 15 dias úteis consecutivos',periodicidade:'Por data de amortização'},{nome:'Patrimônio Líquido negativo',limite:'PL negativo',periodicidade:'Diária'},{nome:'Recuperação judicial / falência de Devedor',limite:'Qualquer ocorrência',periodicidade:'Contínua'}],
+  perfil:{'Razão social':'Cedentes: PLANTUN COMÉRCIO E REPRESENTAÇÃO LTDA. (02.108.194/0001-79), M.S. COMERCIAL AGRÍCOLA LTDA. (17.854.745/0001-10), MATUPÁ COMÉRCIO DE INSUMOS (53.170.020/0001-77), MUTUM COMERCIAL AGRÍCOLA (60.821.916/0001-34), FARTURA COMÉRCIO DE DEFENSIVOS (56.186.728/0001-04), JUARA COMERCIAL AGRÍCOLA (58.864.055/0001-20)','Atividade principal':'Comércio de insumos agrícolas e defensivos — revendas do segmento da agroindústria'},
+  assembleias:[],contatos:[],titulares:[]},
+
+ {id:107,nome:'STRUTTURA AGRO FIDC',cedente:'Ceres Asset / Oliveira Trust',status:'Vigente',nota:'',
+  info:{'Denominação do fundo':'STRUTTURA AGRO FUNDO DE INVESTIMENTO EM DIREITOS CREDITÓRIOS DO AGRONEGÓCIO DE RESPONSABILIDADE LIMITADA','CNPJ do fundo':'50.519.168/0001-86','Ticker':'Não consta — ofertas a Investidores Profissionais (art. 11, Resolução CVM 30)','Tipo de condomínio':'Fechado — cotas resgatadas ao término do prazo ou liquidação','Classes/Cotas':'3 subclasses: Cotas Seniores (múltiplas séries), Cotas Mezanino (múltiplas séries) e Cotas Juniores. Cada série tem Fator de Ponderação próprio. Seniores e Mezanino valorizadas pelo valor de abertura; Juniores pelo fechamento do dia anterior','Data de constituição':'Regulamento datado de 02/10/2023','Prazo do fundo':'Indeterminado — liquidação por deliberação da Assembleia','Volume captado':'Não consta — Valor Unitário de referência: R$ 1.000,00','Qtd. de emissões':'Não consta'},
+  prest:{'Administrador':'OLIVEIRA TRUST DISTRIBUIDORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A. — Ato Declaratório CVM nº 6.696/2002. Remuneração (com Custodiante): 0,27% a.a. sobre o PL, mín. R$ 15.000,00/mês','Gestor':'STRUTTURA CAPITAL GESTÃO DE INVESTIMENTOS LTDA. — CNPJ 40.962.925/0001-38 (denominação anterior da Ceres Asset). Taxa de Gestão: 0,75% a.a. + Performance: 50% da valorização das Cotas Juniores acima de 100% da Taxa DI + 20% a.a.','Custodiante':'OLIVEIRA TRUST DTVM S.A. — Ato Declaratório CVM nº 6.696/2002. Verificação trimestral dos Documentos Comprobatórios: R$ 4.000,00/mês. Escrituração: R$ 2.000,00/mês','Auditor independente':'KPMG, Ernst & Young, PricewaterhouseCoopers ou Deloitte Touche Tohmatsu (lista fechada). Exercício social encerra em 31 de outubro','Escriturador de cotas':'OLIVEIRA TRUST DTVM S.A. — R$ 2.000,00/mês','Assessor jurídico':'Não nominado no Regulamento','Servicer de cobrança':'CERES INVESTIMENTOS E CONSULTORIA LTDA. — CNPJ 34.250.750/0001-33, Uberaba/MG. Remuneração conjunta: 0,75% a.a. (0,40% Consultoria Especializada + 0,35% Cobrança). Agente de Controladoria: OLIVEIRA TRUST SERVICER S.A. — CNPJ 02.150.453/0001-20 (0,09% a.a., mín. R$ 15.000,00/mês)'},
+  carteira:{'PL total do fundo (R$)':'Obter na carteira diária / informe mensal do Administrador','Composição da carteira':'DCs do agronegócio cedidos por Participantes do Agronegócio ou instituições financeiras. Limites por tipo: Duplicatas/CPR-F/CDA-WA até 100%; CCB/CDCA até 40%; Contratos de Fornecimento/NPs garantidas por DCs até 40%; Duplicatas Comissárias/demais NPs até 30%; Cheques até 5%; outros DCs até 5%. DCs sem coobrigação: até 25% do PL. Cedentes em recuperação: até 25% do PL. Alocação mínima de 50% do PL após 180 dias. Prazo médio ponderado da carteira: até 240 dias. LTV ponderado: até 200% (CCB/CDCA) e até 100% (CDA-WA/NPs)','Critérios de elegibilidade':'Moeda nacional; vedada aquisição de DCs de prestadores e relacionadas; passíveis de registro; registrados em entidade registradora antes da data de cessão; não vencidos; prazo médio da carteira ≤ 240 dias; TIR da carteira ≥ TIR Mínima; limites de concentração por Cedente e Devedor; vedada nova aquisição de Cedente com inadimplidos > 45 dias acima de 2% do PL','Razão de garantia':'Índice de Subordinação: (a) Sênior ≥ 50% do PL e (b) Mezanino ≥ 10% do PL — cumulativos. Gestora/Consultoria e sócios devem deter ≥ 50% das Cotas Juniores. Índice de Cobertura ≥ 1,00 (VP dos DCs × Fator de Ponderação + Disponibilidades) ÷ saldo Seniores/Mezanino. Índice de Liquidez ≥ 1,00 (projeção de fluxo a VP pelo CDI em 12 Datas de Referência; 75% no vencimento, 20% em D+30, 3% em D+60; DCs > 90 dias atraso = zero)'},
+  lim:{'Cedente (% do PL)':'Mesmo Cedente / Grupo Econômico: até 10%. 5 maiores Cedentes / Grupos: até 40%. 10 maiores: até 60%. DCs de prestadores e relacionadas: vedado. Cedentes em recuperação: até 25%. Cedente com inadimplidos > 45 dias acima de 2% do PL: vedada nova aquisição','Sacado (% do PL)':'Mesmo Devedor / Grupo Econômico: até 5%. 5 maiores Devedores / Grupos: até 25%. 10 maiores: até 40%. DCs de prestadores e relacionadas: vedado'},
+  cov:[{nome:'Índice de Inadimplência 90 dias',limite:'≥ 3% — Evento de Avaliação (valor nominal de DCs inadimplidos > 90 dias / valor nominal vencidos na janela de 90–455 dias anteriores)',periodicidade:'2 Datas de Referência consecutivas ou 4 alternadas em 12 meses'},{nome:'Índice de Inadimplência 60 dias',limite:'≥ 10% — Evento de Avaliação (janela de 60–425 dias)',periodicidade:'2 Datas de Referência consecutivas ou 4 alternadas em 12 meses'},{nome:'Índice de Substituição',limite:'≥ 5% — DCs substituídos nos 365 dias anteriores / vencidos no mesmo período',periodicidade:'2 Datas de Referência consecutivas ou 4 alternadas em 12 meses'},{nome:'Índice de Renegociação',limite:'≥ 2% — DCs renegociados nos 365 dias anteriores / vencidos no mesmo período',periodicidade:'2 Datas de Referência consecutivas ou 4 alternadas em 12 meses'},{nome:'Índice de Cobertura',limite:'≥ 1,00',periodicidade:'Cada Data de Referência pela Gestora'},{nome:'Índice de Liquidez',limite:'≥ 1,00 ao longo de Horizonte de 12 Datas de Referência',periodicidade:'Cada Data de Referência pela Gestora'},{nome:'Índice de Subordinação Sênior/Mezanino',limite:'Sênior ≥ 50% do PL e Mezanino ≥ 10% do PL — cumulativos',periodicidade:'Diária pela Gestora'},{nome:'TIR da Carteira a Vencer',limite:'≥ TIR Mínima da Carteira a Vencer',periodicidade:'Diária pela Gestora'},{nome:'Alocação mínima',limite:'≥ 50% do PL após 180 dias da Data de Início',periodicidade:'Contínua'}],
+  perfil:{'Razão social':'Struttura Agro FIDC — cedentes do segmento do agronegócio (Participantes do Agronegócio ou instituições financeiras)','Atividade principal':'FIDC do agronegócio — aquisição diversificada de DCs (duplicatas, CPR-F, CDA-WA, CCB, CDCA, notas promissórias, contratos de fornecimento)'},
+  assembleias:[],contatos:[],titulares:[]},
+
+ {id:108,nome:'UP NORTH FIAGRO',cedente:'Suprema / Arado / Cardeal / Semear',status:'Vigente',nota:'',
+  info:{'Denominação do fundo':'UP NORTH FIAGRO – DIREITOS CREDITÓRIOS – RESPONSABILIDADE LIMITADA','CNPJ do fundo':'64.008.175/0001-28','Ticker':'Cotas Seniores: distribuição pública conforme Apêndice. Cotas Mezanino e Júnior: distribuição privada. Cotas depositáveis no MDA e Fundos21','Tipo de condomínio':'Fechado','Classes/Cotas':'Classe Única — 3 subclasses: Cotas Sêniores (múltiplas séries), Cotas Subordinadas Mezanino (múltiplas séries) e Cotas Subordinadas Júnior. ANBIMA: Agro, Indústria e Comércio — Recebíveis Comerciais. Cotas Mezanino (quando da Cedente) e Cotas Júnior só negociáveis entre Cedentes e Partes Relacionadas','Data de constituição':'Regulamento datado de 11/12/2025','Prazo do fundo':'Indeterminado — prazo de cada subclasse conforme Apêndice','Volume captado':'Não consta','Qtd. de emissões':'Não consta'},
+  prest:{'Administrador':'VÓRTX DISTRIBUIDORA DE TÍTULOS E VALORES MOBILIÁRIOS LTDA. — CNPJ 22.610.500/0001-88. Taxa de Administração: 0,22% a.a. sobre o PL, mín. R$ 15.000,00/mês + R$ 3.000,00 por evento de liquidação B3 + R$ 2.000,00 por chamada de capital + R$ 1.500,00 por Assembleia','Gestor':'CERES ASSET GESTÃO DE INVESTIMENTOS LTDA. — CNPJ 40.962.925/0001-38. Taxa de Gestão: 0,65% a.a. sobre o PL, mín. R$ 13.000,00/mês','Custodiante':'VÓRTX DTVM LTDA. (mesmo Administrador) — custódia e controladoria inclusas na Taxa de Administração; verificação amostral de lastro: R$ 5.000,00/trimestre','Auditor independente':'Não nominado no Regulamento','Escriturador de cotas':'VÓRTX DTVM LTDA. — R$ 2.000,00/mês + custo por cotista escalonado (isento até 50; R$ 1,50 de 51 a 1.999; R$ 1,00 de 2.000 a 10.000; R$ 0,50 acima)','Assessor jurídico':'Não nominado no Regulamento','Servicer de cobrança':'CERES INVESTIMENTOS E CONSULTORIA LTDA. — CNPJ 34.250.750/0001-33, Uberaba/MG. Taxa de Cobrança: 0,10% a.a., mín. R$ 2.100,00/mês. Consultoria Especializada: 0,10% a.a., mín. R$ 2.100,00/mês'},
+  carteira:{'PL total do fundo (R$)':'Obter na carteira diária / informe mensal do Administrador','Composição da carteira':'DCs de compra e venda de produtos do agronegócio cedidos por SUPREMA COMÉRCIO DE MÁQUINAS, ARADO COMÉRCIO DE MÁQUINAS, CARDEAL PRESTADORA DE SERVIÇOS AGRÍCOLAS, SEMEAR MÁQUINAS e Grupos Econômicos. Alocação mínima > 67% do PL em 180 dias. Liquidez em moeda corrente, títulos públicos, renda fixa, compromissadas e cotas de fundos. Derivativos apenas para proteção ou troca de indexador','Critérios de elegibilidade':'Moeda nacional; não vencidos; vencimento ≤ 120 dias antes do vencimento das Seniores de maior prazo; prazo mínimo 5 dias da emissão; concentração por Devedor (incl. Grupo) ≤ 7% e 5 maiores ≤ 25% (cada ≤ 7%); devedor sem atraso > 30 dias; não avaliados ≤ 15% do PL. Atenção: Regulamento traz divergência textual no limite dos 5 maiores ("25% (quinze por cento)") — confirmar com a Administradora','Razão de garantia':'Após 180 dias da 1ª Integralização: Índice de Subordinação Sênior ≤ 80% do PL; Índice de Subordinação Mezanino ≥ 17% do PL; Índice de Subordinação Júnior ≥ 3% do PL. Apuração diária pela Gestora e Administradora'},
+  lim:{'Cedente (% do PL)':'SUPREMA (15.671.525/0001-26), ARADO (36.170.359/0001-54), CARDEAL (33.145.322/0001-88), SEMEAR (54.563.496/0001-30) e Grupos Econômicos: sem limite individual no Regulamento','Sacado (% do PL)':'Devedor / Grupo Econômico (Critério de Elegibilidade): até 7%. 5 maiores Devedores: até 25% (divergência no Regulamento — confirmar), cada ≤ 7%. Não avaliados: até 15%'},
+  cov:[{nome:'Índice de Inadimplemento 90 dias',limite:'DCs vencidos entre 1º e 90º dia: até 5% do PL',periodicidade:'Mensal pela Gestora'},{nome:'Índice de Inadimplemento 120 dias',limite:'DCs vencidos entre 91º e 120º dia: até 4% do PL',periodicidade:'Mensal pela Gestora'},{nome:'Índice de Inadimplemento 150 dias',limite:'DCs vencidos entre 121º e 150º dia: até 3% do PL',periodicidade:'Mensal pela Gestora'},{nome:'Índice de Inadimplemento 180 dias',limite:'DCs vencidos entre 151º e 180º dia: até 2% do PL',periodicidade:'Mensal pela Gestora'},{nome:'Índice de Repasse + Recompra',limite:'DCs pagos de forma diversa do previsto no mês anterior / PL: até 10%',periodicidade:'5º dia útil de cada mês'},{nome:'Índice de Resolução',limite:'DCs com cessão resolvida de forma diversa / PL: até 5%',periodicidade:'5º dia útil de cada mês'},{nome:'Índice de Subordinação Sênior/Mezanino/Júnior',limite:'Sênior máx. 80%; Mezanino mín. 17%; Júnior mín. 3% do PL — após 180 dias da 1ª Integralização',periodicidade:'Diária pela Gestora e Administradora'},{nome:'Índice de Alocação Mínima',limite:'> 50% do PL (índice) / > 67% em 180 dias (item 7.4.1) — divergência a confirmar',periodicidade:'Mensal (índice) e diária (limites)'}],
+  perfil:{'Razão social':'Cedentes: SUPREMA COMÉRCIO DE MÁQUINAS LTDA. (CNPJ 15.671.525/0001-26), ARADO COMÉRCIO DE MÁQUINAS LTDA. (36.170.359/0001-54), CARDEAL PRESTADORA DE SERVIÇOS AGRÍCOLAS LTDA. (33.145.322/0001-88), SEMEAR MÁQUINAS LTDA. (54.563.496/0001-30)','Atividade principal':'Comércio e prestação de serviços no segmento de máquinas e insumos agrícolas'},
+  assembleias:[],contatos:[],titulares:[
+   {investidor:'BTG Asset',veiculo:'CERES BTG URA AGRO 2 FUNDO DE INVESTIMENTO NAS CADEIAS PRODUTIVAS DO AGRONEGOCIO RESP LIMITADA',cnpj:'63.326.551/0001-60',classe:'Sênior',qtdCotas:'20.000',pct:''},
+   {investidor:'JiveMaua',veiculo:'JIVEMAUA BOSSANOVA SECURITIZADO MASTER',cnpj:'64.447.452/0001-07',classe:'Sênior',qtdCotas:'28.614',pct:''},
+   {investidor:'Arado',veiculo:'ARADO COMERCIO DE MAQUINAS LTDA',cnpj:'36.170.359/0001-54',classe:'Mezanino',qtdCotas:'750,61',pct:''},
+   {investidor:'Suprema',veiculo:'SUPREMA COMÉRCIO DE MÁQUINAS LTDA',cnpj:'15.671.525/0001-26',classe:'Mezanino',qtdCotas:'9.913,49',pct:''}
+  ]},
+
+ {id:109,nome:'VALORIZA FIDC',cedente:'Valoriza Agronegócios S.A.',status:'Vigente',nota:'',
+  info:{'Denominação do fundo':'VALORIZA FUNDO DE INVESTIMENTO EM DIREITOS CREDITÓRIOS RESPONSABILIDADE LIMITADA','CNPJ do fundo':'52.093.999/0001-64','Ticker':'Oferta pública sob Resolução CVM 160 em regime de melhores esforços, destinada a Investidores Qualificados','Tipo de condomínio':'Fechado','Classes/Cotas':'Classe Única — 3 subclasses: Cotas Seniores, Cotas Subordinadas Mezanino (com classificação de risco) e Cotas Subordinadas Júnior. Aplicação inicial mínima: R$ 1.000,00. Admitida subscrição integral por um mesmo investidor','Data de constituição':'Regulamento datado de 20/02/2025','Prazo do fundo':'Indeterminado — prazo de cada subclasse conforme Suplemento/Apêndice','Volume captado':'Não consta — Valor Unitário de referência: R$ 1.000,00','Qtd. de emissões':'Não consta'},
+  prest:{'Administrador':'SINGULARE CORRETORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A. — CNPJ 62.285.390/0001-40. Taxa de Administração: 0,27% a.a. (até R$ 75MM) / 0,225% a.a. (acima), mín. R$ 12.150,00/mês (1º ao 6º mês) e R$ 14.850,00/mês (a partir do 7º mês), reajuste anual pelo IPCA','Gestor':'STRUTTURA CAPITAL GESTÃO DE INVESTIMENTOS LTDA. — CNPJ 40.962.925/0001-38 (denominação anterior da Ceres Asset). Taxa de Gestão: 0,65% a.a. Cogestor: BRAVE GESTORA DE RECURSOS LTDA. — CNPJ 35.704.148/0001-91, também com 0,65% a.a. Taxa de Gestão total: 1,30% a.a.','Custodiante':'SINGULARE CTVM S.A. — Taxa de Custódia: 0,03% a.a. (até R$ 75MM) / 0,025% a.a. (acima), mín. R$ 1.350,00/mês (1º ao 6º) e R$ 1.650,00/mês (a partir do 7º)','Auditor independente':'KPMG, Ernst & Young, PricewaterhouseCoopers ou Deloitte Touche Tohmatsu (lista fechada)','Escriturador de cotas':'SINGULARE CORRETORA DE TÍTULOS E VALORES MOBILIÁRIOS S.A. — incluído na Taxa de Administração','Assessor jurídico':'Não nominado no Regulamento','Servicer de cobrança':'VALORIZA AGRONEGÓCIOS S.A. — CNPJ 24.006.876/0001-03, Patos de Minas/MG (a própria Cedente atua como Agente de Cobrança — cobrança judicial e extrajudicial dos DCs vencidos e não pagos)'},
+  carteira:{'PL total do fundo (R$)':'Obter na carteira diária / informe mensal do Administrador','Composição da carteira':'DCs cedidos pela VALORIZA AGRONEGÓCIOS S.A. (CNPJ 24.006.876/0001-03), representados por arquivos XML + título de crédito e/ou CPR-F. Alocação mínima: entre 50% e 100% do PL após 180 dias da Subscrição Inicial. Taxa Mínima de Aquisição = média ponderada das metas de remuneração das Seniores e Mezanino + despesas. Percentuais verificados mensalmente com base no PL do mês anterior. Vedada cessão ou originação de DCs pela Administradora, Gestor, Cogestor, Custodiante e relacionadas','Critérios de elegibilidade':'DCs representados por XML + título e/ou CPR-F; moeda nacional; prazo de vencimento mínimo de 10 dias da emissão; prazo máximo de 360 dias da emissão. Verificação exclusiva pelo Gestor previamente a cada cessão via Arquivo Remessa','Razão de garantia':'Índice de Subordinação Subordinadas: valor das subclasses subordinadas / PL ≥ 40% (diário). Índice de Subordinação Júnior: valor das Cotas Júnior / PL ≥ 20% (diário). Apuração diária pela Administradora; informação imediata à Gestora e mensal aos Cotistas. No desenquadramento: cotistas subordinados respondem em 5 dias e integralizam em 10 dias (moeda corrente ou dação em pagamento de DCs)'},
+  lim:{'Cedente (% do PL)':'Cedente única — VALORIZA AGRONEGÓCIOS S.A.: sem limite percentual no Regulamento. Cessão ou originação por prestadores e relacionadas: vedado','Sacado (% do PL)':'Mesmo Devedor/coobrigação: até 20% do PL. Sem tabela escalonada no Regulamento'},
+  cov:[{nome:'Índice de Subordinação Subordinadas',limite:'Cotas subordinadas / PL ≥ 40%',periodicidade:'Diária pela Administradora'},{nome:'Índice de Subordinação Júnior',limite:'Cotas Júnior / PL ≥ 20%',periodicidade:'Diária pela Administradora'},{nome:'Índice de Repasse + Recompra',limite:'DCs pagos de forma diversa do previsto no mês anterior / PL ≤ 25%',periodicidade:'5º dia útil de cada mês'},{nome:'Índice de Resolução',limite:'DCs com cessão resolvida no mês anterior / PL ≤ 6%',periodicidade:'5º dia útil de cada mês'},{nome:'Alocação Mínima',limite:'Entre 50% e 100% do PL após 180 dias da Subscrição Inicial',periodicidade:'Mensal com base no PL do mês anterior'},{nome:'Índices de Inadimplemento por faixa',limite:'Tabela de provisão: 0–30 dias (A 0%); 31–60 (B 5%); 61–90 (C 10%); 91–120 (D 32,5%); 121–150 (E 60%); 151–360 (F 100%); >361 dias (G write-off)',periodicidade:'Diária a partir do 91º dia de funcionamento'},{nome:'Patrimônio Líquido negativo',limite:'PL negativo — suspende amortizações e novas subscrições; exige comunicação e plano de resolução em 20 dias',periodicidade:'Contínua'}],
+  perfil:{'Razão social':'VALORIZA AGRONEGÓCIOS S.A. — CNPJ 24.006.876/0001-03, Patos de Minas/MG','Atividade principal':'Agronegócio — cedente única e Agente de Cobrança do FIDC. Créditos originados de operações agroindustriais'},
+  assembleias:[],contatos:[],titulares:[
+   {investidor:'Banco Mercantil',veiculo:'BANCO MERCANTIL DE INVESTIMENTOS S.A.',cnpj:'34.169.557/0001-72',classe:'Sênior 1',qtdCotas:'9.574,14',pct:''},
+   {investidor:'Brave Asset',veiculo:'BRAVE 90 FUNDO DE INVEST. EM COTAS',cnpj:'35.726.300/0001-37',classe:'Sênior 1',qtdCotas:'17.303,84',pct:''},
+   {investidor:'Brave Asset',veiculo:'BRAVE BWM FIC DE FIDC',cnpj:'49.089.398/0001-73',classe:'Sênior 1',qtdCotas:'1.357',pct:''},
+   {investidor:'Brave Asset',veiculo:'BRAVE 180 INSTITUCIONAL FIC',cnpj:'36.015.243/0001-40',classe:'Mezanino 1',qtdCotas:'1.535,90',pct:''},
+   {investidor:'Brave Asset',veiculo:'BRAVE 90 FUNDO DE INVEST. EM COTAS',cnpj:'35.726.300/0001-37',classe:'Mezanino 1',qtdCotas:'5.293,67',pct:''},
+   {investidor:'Brave Asset',veiculo:'BRAVE BWM FIC DE FIDC',cnpj:'49.089.398/0001-73',classe:'Mezanino 1',qtdCotas:'693',pct:''},
+   {investidor:'Ceres Investimentos',veiculo:'CERES INVESTIMENTOS E CONSULTORIA LTDA.',cnpj:'34.250.750/0001-33',classe:'Mezanino 1',qtdCotas:'143,71',pct:''}
+  ]}
+];
+let currentFFilter='Vigente';
+function scF(s){if(s==='Vigente')return 's-at';if(s==='Inadimplente')return 's-in';if(s==='Cancelada')return 's-ca';return 's-li';}
+function tcF(a,tid){
+if(tid==='info'){
+const isEnc=isEncerrado(a.status);
+const tBtn=isEnc
+?`<div style="margin-top:12px;padding-top:10px;border-top:1px solid #eef2f5"><button class="btn-status-toggle btn-reativar" data-faid="${a.id}" title="Reativar">↺ Reativar fundo</button></div>`
+:`<div style="margin-top:12px;padding-top:10px;border-top:1px solid #eef2f5"><button class="btn-status-toggle btn-encerrar" data-faid="${a.id}" title="Encerrar">✓ Encerrar fundo</button></div>`;
+return fields(a.info)+tBtn;}
+if(tid==='carteira') return fields(a.carteira);
+if(tid==='prest') return fields(a.prest);
+if(tid==='lim') return fields(a.lim);
+if(tid==='cov'){
+if(!a.cov||!a.cov.length) return '<div style="font-size:12px;color:var(--text3);font-style:italic;padding:8px 0">Nenhum covenant registrado.</div>';
+return a.cov.map(c=>`<div class="frow"><span class="flabel">${c.nome}</span>${fv(c.limite)}</div><div class="frow"><span class="flabel">Periodicidade</span>${fv(c.periodicidade)}</div>`).join('');}
+if(tid==='perfil') return a.perfil?fields(a.perfil):'<span style="color:var(--text3);font-style:italic;font-size:12px">Sem dados.</span>';
+if(tid==='assembleias') return tblA(a.assembleias,a.id);
+if(tid==='contatos') return tblC(a.contatos,a.id);
+if(tid==='titulares') return tblT(a.titulares,a.id);
+return '';}
+function renderFundoCard(a){
+const nav=TABS_FUNDO.map((t,i)=>`<div class="tabitem${i===0?' on':''}" data-cid="${a.id}" data-tab="${t.id}">${t.label}</div>`).join('');
+const panels=TABS_FUNDO.map((t,i)=>`<div class="tabpanel${i===0?' on':''}" id="tp-${a.id}-${t.id}">${tcF(a,t.id)}</div>`).join('');
+const nota=a.nota||'';
+const notaPreview=nota?nota.substring(0,60)+(nota.length>60?'…':''):'Adicionar nota rápida...';
+const isEnc=isEncerrado(a.status);
+const toggleBtn=isEnc
+?`<button class="btn-status-toggle btn-reativar" data-faid="${a.id}" title="Reativar fundo">↺ Reativar</button>`
+:`<button class="btn-status-toggle btn-encerrar" data-faid="${a.id}" title="Encerrar fundo">✓ Encerrar</button>`;
+return `<div class="acard" data-id="${a.id}" data-tipo="Fundo" data-status="${a.status}">
+<div class="cheader">
+<div class="cheader-top">
+<span class="ctype">FUNDO <span class="num-badge">${a.id-100}</span></span>
+<div style="display:flex;align-items:center;gap:6px;position:relative">
+<span class="sbadge ${scF(a.status)}"><span class="sdot"></span>${a.status}</span>
+<button class="nota-btn ${nota?'has-nota':''}" data-nota-toggle="${a.id}" title="${nota?'Ver nota':'Adicionar nota'}">📝</button>
+<div class="nota-popup" id="nota-panel-${a.id}">
+<textarea id="nota-text-${a.id}" placeholder="Anotação rápida...">${nota}</textarea>
+<div class="nota-popup-footer">
+<button class="nota-popup-cancel" data-nota-cancel="${a.id}">Cancelar</button>
+<button class="nota-popup-save" data-nota-save="${a.id}">Salvar</button>
+</div>
+</div>
+</div>
+</div>
+<div class="cname">${a.nome}</div>
+<div class="csub">${a.cedente||'—'}</div>
+<div class="tabnav">${nav}</div>
+</div>
+<div>${panels}</div>
+</div>`;}
+function updateFchipCounts(){
+document.getElementById('fchip-vig').textContent=DATA_FUNDOS.filter(a=>a.status==='Vigente').length;
+document.getElementById('fchip-inad').textContent=DATA_FUNDOS.filter(a=>a.status==='Inadimplente').length;
+document.getElementById('fchip-enc').textContent=DATA_FUNDOS.filter(a=>isEncerrado(a.status)).length;
+document.getElementById('fchip-all').textContent=DATA_FUNDOS.length;}
+function renderFundos(){
+const q=(document.getElementById('srch-fundos').value||'').toLowerCase();
+const filtered=DATA_FUNDOS.filter(a=>{
+if(currentFFilter==='Vigente'&&a.status!=='Vigente') return false;
+if(currentFFilter==='Encerrada'&&!isEncerrado(a.status)) return false;
+if(currentFFilter==='Inadimplente'&&a.status!=='Inadimplente') return false;
+if(q){const s=(a.nome+a.cedente+JSON.stringify(a.info)).toLowerCase();if(!s.includes(q))return false;}
+return true;});
+const g=document.getElementById('fgrid');
+if(!filtered.length){g.innerHTML='<div class="no-res"><svg width="32" height="32" fill="none" stroke="#9ab0bc" stroke-width="1.5" viewBox="0 0 24 24" style="display:block;margin:0 auto 10px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Nenhum fundo encontrado.</div>';return;}
+g.innerHTML=filtered.map(renderFundoCard).join('');}
+document.querySelectorAll('.fchip').forEach(c=>{
+c.addEventListener('click',()=>{
+document.querySelectorAll('.fchip').forEach(x=>x.classList.remove('on'));
+c.classList.add('on');
+currentFFilter=c.dataset.ft;
+renderFundos();});});
+document.getElementById('srch-fundos')?.addEventListener('input',renderFundos);
+document.addEventListener('click',function(e){
+if(!e.target.closest('[data-nota-toggle]')&&!e.target.closest('.nota-popup')){
+document.querySelectorAll('.nota-popup.open').forEach(p=>p.classList.remove('open'));}});
+currentFilter='Vigente';
+document.querySelector('.chip[data-t="Vigente"]').classList.add('on');
+updateChipCounts();
+renderAll();
+updateFchipCounts();
+document.querySelector('.fchip[data-ft="Vigente"]').classList.add('on');
+renderInvList();
+</script>
+
+<!-- MODAL INVESTIDOR -->
+<div class="inv-modal-overlay" id="inv-modal-overlay">
+  <div class="inv-modal">
+    <div class="inv-modal-title" id="inv-modal-title">Novo investidor</div>
+    <div id="inv-modal-fields"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="inv-modal-cancel">Cancelar</button>
+      <button class="btn-save" id="inv-modal-save">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL POSICAO CRA -->
+<div class="inv-modal-overlay" id="pos-modal-overlay">
+  <div class="inv-modal" style="width:420px">
+    <div class="inv-modal-title" id="pos-modal-title">Adicionar posição em CRA</div>
+    <div class="modal-field"><label id="pm-label-op">CRA / Fundo</label><input id="pm-cra" placeholder="Ex: CRA NOOA — 23ª Emissão"></div>
+    <div class="modal-field"><label>Série</label><input id="pm-serie" placeholder="Ex: 1ª Série"></div>
+    <div class="modal-field"><label>Qtd. de cotas</label><input id="pm-cotas" placeholder="Ex: 1.000"></div>
+    <div class="modal-field"><label>Valor investido (R$)</label><input id="pm-valor" placeholder="Ex: 1.000.000,00"></div>
+    <div class="modal-field"><label>% do fundo</label><input id="pm-pct" placeholder="Ex: 5,00%"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="pos-modal-cancel">Cancelar</button>
+      <button class="btn-save" id="pos-modal-save">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONTATO INVESTIDOR -->
+<div class="inv-modal-overlay" id="ct-modal-overlay">
+  <div class="inv-modal" style="width:480px">
+    <div class="inv-modal-title">Adicionar contato com investidor</div>
+    <div class="modal-field"><label>Data</label><input id="ctm-data" placeholder="dd/mm/aaaa"></div>
+    <div class="modal-field"><label>Operação</label><input id="ctm-op" placeholder="Ex: CRA NOOA 23ª"></div>
+    <div class="modal-field"><label>Nome do contato</label><input id="ctm-nome" placeholder="Nome da pessoa contatada"></div>
+    <div class="modal-field"><label>Assunto/Solicitação</label><textarea id="ctm-assunto" style="min-height:60px" placeholder="Descreva o assunto ou solicitação"></textarea></div>
+    <div class="modal-field"><label>Observação</label><textarea id="ctm-obs" style="min-height:50px" placeholder="Observações adicionais"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="ct-modal-cancel">Cancelar</button>
+      <button class="btn-save" id="ct-modal-save">Salvar</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
